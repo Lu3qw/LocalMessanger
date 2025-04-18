@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35806.99 d17.13
+VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMessanger", "LocalMessanger\LocalMessanger.csproj", "{CBC3483C-CCED-404E-B198-75A8F518F545}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMessangerServer", "LocalMessanger\LocalMessangerServer.csproj", "{CBC3483C-CCED-404E-B198-75A8F518F545}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMessangerClient", "LocalMessangerClient\LocalMessangerClient.csproj", "{DD033D0F-1959-41CB-B64E-02FD329AD0FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CBC3483C-CCED-404E-B198-75A8F518F545}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBC3483C-CCED-404E-B198-75A8F518F545}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBC3483C-CCED-404E-B198-75A8F518F545}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD033D0F-1959-41CB-B64E-02FD329AD0FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD033D0F-1959-41CB-B64E-02FD329AD0FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD033D0F-1959-41CB-B64E-02FD329AD0FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD033D0F-1959-41CB-B64E-02FD329AD0FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
