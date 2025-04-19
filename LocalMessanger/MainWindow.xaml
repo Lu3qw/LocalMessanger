@@ -94,6 +94,7 @@
                     FontWeight="Bold" 
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center" 
+                    Click="BroadcastButton_Click"
                     />
             <Button x:Name="BanButton"
                     Margin="10" 

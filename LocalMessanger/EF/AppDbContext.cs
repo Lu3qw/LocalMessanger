@@ -15,6 +15,8 @@ namespace LocalMessangerServer.EF
         public DbSet<UserLog> UserLogs { get; set; }
         public DbSet<ServerLog> ServerLogs { get; set; }
 
+        public AppDbContext() { }
+
         public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options) { }
 
@@ -35,9 +37,9 @@ namespace LocalMessangerServer.EF
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseLazyLoadingProxies();
-
-            optionsBuilder.UseSqlServer(@"DATA SOURCE=NITRO; DATABASE=LocalMEssangerDB; UID=sa; PWD=1; TrustServerCertificate=true;");
+            optionsBuilder
+                .UseLazyLoadingProxies()
+                .UseSqlServer(@"Server=localhost;Database=LocalMessanger;Trusted_Connection=True; TrustServerCertificate=True;");
         }
     }
 }
