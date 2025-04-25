@@ -16,6 +16,8 @@ public class ChatServer
 {
     private readonly TcpListener _listener;
     private readonly ConcurrentDictionary<TcpClient, string> _clients = new();
+    // Store the writer for each connected client.
+    private readonly ConcurrentDictionary<TcpClient, StreamWriter> _clientWriters = new();
     private readonly LogService _logService;
     private readonly AuthService _authService;
     private CancellationTokenSource? _cancellationTokenSource;
@@ -53,9 +55,7 @@ public class ChatServer
                 catch (Exception ex)
                 {
                     if (_listener.Server.IsBound)
-                    {
                         _logService.Log($"Error accepting client: {ex.Message}", "Error");
-                    }
                 }
             }
         }
@@ -82,19 +82,23 @@ public class ChatServer
 
     private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
     {
-        var clientEndPoint = client.Client.RemoteEndPoint?.ToString();
-        if (clientEndPoint != null)
-        {
-            _clients.TryAdd(client, clientEndPoint);
-            App.Current.Dispatcher.Invoke(() => ConnectedUsers.Add(clientEndPoint));
-            _logService.Log($"Client connected: {clientEndPoint}", "Info");
-        }
+        // Get initial identifier (IP:port); may be replaced after login.
+        string initialId = client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
+        // Add client to dictionary with this initial identifier.
+        _clients.TryAdd(client, initialId);
+        App.Current.Dispatcher.Invoke(() => ConnectedUsers.Add(initialId));
+        _logService.Log($"Client connected: {initialId}", "Info");
 
         try
         {
             using var stream = client.GetStream();
             using var reader = new StreamReader(stream, Encoding.UTF8);
-            using var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+            // Create a writer for this client and store it for later use.
+            var writer = new StreamWriter(stream, Encoding.UTF8)
+            {
+                AutoFlush = true
+            };
+            _clientWriters[client] = writer;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -103,25 +107,35 @@ public class ChatServer
                     break;
 
                 _logService.Log($"Received request: {request}", "Debug");
-
-                // Pass the client as a parameter here
                 var response = await ProcessRequestAsync(request, client);
                 await writer.WriteLineAsync(response);
             }
         }
+        catch (IOException ioex)
+        {
+            // Likely the connection was closed by the client.
+            _logService.Log($"IOException handling client ({initialId}): {ioex.Message}", "Error");
+        }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            _logService.Log($"Error handling client {clientEndPoint}: {ex.Message}", "Error");
+            _logService.Log($"Error handling client ({initialId}): {ex.Message}", "Error");
         }
         finally
         {
-            if (clientEndPoint != null)
+            // Retrieve the current identifier for removal.
+            string currentId;
+            if (!_clients.TryGetValue(client, out currentId))
+                currentId = initialId;
+
+            _clients.TryRemove(client, out _);
+            _clientWriters.TryRemove(client, out _);
+            App.Current.Dispatcher.Invoke(() =>
             {
-                _clients.TryRemove(client, out _);
-                App.Current.Dispatcher.Invoke(() => ConnectedUsers.Remove(clientEndPoint));
-                _logService.Log($"Client disconnected: {clientEndPoint}", "Info");
-            }
+                if (ConnectedUsers.Contains(currentId))
+                    ConnectedUsers.Remove(currentId);
+            });
+            _logService.Log($"Client disconnected: {currentId}", "Info");
             client.Close();
         }
     }
@@ -131,7 +145,7 @@ public class ChatServer
         try
         {
             var parts = request.Split(':');
-            // For login/register expect at least 3 parts:
+            // For login / register, expect at least 3 parts:
             if (parts.Length < 3)
                 return "error:invalid_request";
 
@@ -149,7 +163,21 @@ public class ChatServer
                 var username = parts[1];
                 var password = parts[2];
                 var success = await _authService.LoginAsync(username, password);
-                // Do not update the client's identifier; keep using the original IP:port
+                if (success)
+                {
+                    // Update the client's identifier to be the username.
+                    _clients[client] = username;
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        // Remove the old (IP:port) entry and add the username.
+                        var old = client.Client.RemoteEndPoint?.ToString();
+                        if (old != null && ConnectedUsers.Contains(old))
+                        {
+                            ConnectedUsers.Remove(old);
+                        }
+                        ConnectedUsers.Add(username);
+                    });
+                }
                 return success ? "success" : "error:invalid_credentials";
             }
             else if (action == "message")
@@ -163,7 +191,7 @@ public class ChatServer
 
                 await _logService.LogAsync($"Message from {sender} to {receiver}: {content}", "Info");
 
-                // Save the message to the database
+                // Save the message to the database.
                 using (var db = new AppDbContext())
                 {
                     var senderUser = db.Users.FirstOrDefault(u => u.Username == sender);
@@ -182,95 +210,31 @@ public class ChatServer
                     await db.SaveChangesAsync();
                 }
 
-                // Forward the message to the receiver if connected
-                foreach (var kvp in _clients)
+                // Forward the message to the receiver if connected.
+                foreach (var kvp in _clients.ToList())
                 {
-                    // Check if the stored value (IP:port) matches the receiver
-                    // (This assumes your client sends the receiver as an IP string.)
                     if (kvp.Value == receiver)
                     {
-                        using var writer = new StreamWriter(kvp.Key.GetStream(), Encoding.UTF8) { AutoFlush = true };
-                        await writer.WriteLineAsync($"message:{sender}:{content}");
-                        return "success";
-                    }
-                }
-                return "error:receiver_not_found";
-            }
-            else
-            {
-                return "error:unknown_action";
-            }
-        }
-        catch (Exception ex)
-        {
-            _logService.Log($"Error processing request: {ex.Message}", "Error");
-            return "error:server_error";
-        }
-    }
-
-    private async Task<string> ProcessRequestAsync(string request)
-    {
-        try
-        {
-            var parts = request.Split(':');
-            // Для login / register потрібно принаймні 3 частини:
-            if (parts.Length < 3)
-                return "error:invalid_request";
-
-            var action = parts[0];
-
-            if (action == "register")
-            {
-                var username = parts[1];
-                var password = parts[2];
-                var success = await _authService.RegisterAsync(username, password);
-                return success ? "success" : "error:username_taken";
-            }
-            else if (action == "login")
-            {
-                var username = parts[1];
-                var password = parts[2];
-                var success = await _authService.LoginAsync(username, password);
-                return success ? "success" : "error:invalid_credentials";
-            }
-            else if (action == "message")
-            {
-                // Для повідомлень потрібно мінімум 4 частини: action, sender, receiver, content
-                if (parts.Length < 4)
-                    return "error:invalid_message_format";
-                var sender = parts[1];
-                var receiver = parts[2];
-                var content = string.Join(":", parts.Skip(3));
-
-                await _logService.LogAsync($"Message from {sender} to {receiver}: {content}", "Info");
-
-                // Збереження повідомлення в базі даних
-                using (var db = new AppDbContext())
-                {
-                    var senderUser = db.Users.FirstOrDefault(u => u.Username == sender);
-                    var receiverUser = db.Users.FirstOrDefault(u => u.Username == receiver);
-                    if (senderUser == null || receiverUser == null)
-                        return "error:user_not_found";
-
-                    var msg = new Message
-                    {
-                        SenderId = senderUser.Id,
-                        ReceiverId = receiverUser.Id,
-                        Text = content,
-                        SentAt = DateTime.UtcNow
-                    };
-                    db.Messages.Add(msg);
-                    await db.SaveChangesAsync();
-                }
-
-                // Пересилання повідомлення отримувачу, якщо він підключений
-                foreach (var client in _clients)
-                {
-                    if (client.Value == receiver)
-                    {
-                        using var writer = new StreamWriter(client.Key.GetStream(), Encoding.UTF8) { AutoFlush = true };
-                        await writer.WriteLineAsync($"message:{sender}:{content}");
-                        return "success";
+                        try
+                        {
+                            // Use the already created StreamWriter for the receiver.
+                            if (_clientWriters.TryGetValue(kvp.Key, out var receiverWriter))
+                            {
+                                await receiverWriter.WriteLineAsync($"message:{sender}:{content}");
+                                return "success";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logService.Log($"Error forwarding message to {receiver}: {ex.Message}", "Error");
+                            _clients.TryRemove(kvp.Key, out _);
+                            _clientWriters.TryRemove(kvp.Key, out _);
+                            App.Current.Dispatcher.Invoke(() =>
+                            {
+                                if (ConnectedUsers.Contains(kvp.Value))
+                                    ConnectedUsers.Remove(kvp.Value);
+                            });
+                        }
                     }
                 }
                 return "error:receiver_not_found";

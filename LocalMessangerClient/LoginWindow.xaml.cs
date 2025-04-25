@@ -13,13 +13,11 @@ public partial class LoginWindow : Window
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
-        // Якщо існує попереднє підключення — закриваємо його
         if (_chatClient != null)
         {
             _chatClient.Disconnect();
             _chatClient = null;
         }
-
         try
         {
             _chatClient = new ChatClient("127.0.0.1", 25001);
@@ -29,24 +27,22 @@ public partial class LoginWindow : Window
             MessageBox.Show($"Error during connecting: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
-
         var username = UsernameTextBox.Text.Trim();
         var password = PasswordBox.Password.Trim();
-
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             MessageBox.Show("Username and password cannot be empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-
         try
         {
             var response = await _chatClient.SendAuthRequestAsync("login", username, password);
             if (response == "success")
             {
+                // Start receiving messages immediately after login.
+                _ = _chatClient.StartReceivingAsync();
                 MessageBox.Show("Login successful!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                // Передаємо ім'я користувача в MainWindow
+                // Pass the connected ChatClient and username to MainWindow.
                 var mainWindow = new MainWindow(_chatClient, username);
                 mainWindow.Show();
                 this.Close();
@@ -69,7 +65,6 @@ public partial class LoginWindow : Window
             _chatClient.Disconnect();
             _chatClient = null;
         }
-
         try
         {
             _chatClient = new ChatClient("127.0.0.1", 25001);
@@ -79,16 +74,13 @@ public partial class LoginWindow : Window
             MessageBox.Show($"Error during connecting: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
-
         var username = UsernameTextBox.Text.Trim();
         var password = PasswordBox.Password.Trim();
-
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             MessageBox.Show("Username and password cannot be empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-
         try
         {
             var response = await _chatClient.SendAuthRequestAsync("register", username, password);

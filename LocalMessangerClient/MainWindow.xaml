@@ -26,11 +26,12 @@
         <!-- Header -->
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Background="CornflowerBlue" VerticalAlignment="Center">
             <TextBlock Text="Local Messenger" FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Top" Margin="10"/>
-           <Button Content="Change Theme" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
-           <Button Content="Change Language" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
-           
-           <TextBlock Text="Username: [YourUsername]" FontSize="16" FontWeight="Normal" Foreground="White" VerticalAlignment="Top" Margin="310,10,10,10"/>
+            <Button Content="Change Theme" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
+            <Button Content="Change Language" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
+            <!-- Updated TextBlock with x:Name for username display -->
+            <TextBlock x:Name="UsernameDisplayTextBlock" Text="Username: [YourUsername]" FontSize="16" FontWeight="Normal" Foreground="White" VerticalAlignment="Top" Margin="300,10,10,10"/>
         </StackPanel>
+
 
         <!-- Chat List -->
         <ListBox x:Name="ChatListBox" Grid.Row="2" Grid.Column="0" Margin="10" Background="WhiteSmoke" Foreground="Black" BorderBrush="Gray" BorderThickness="1">
