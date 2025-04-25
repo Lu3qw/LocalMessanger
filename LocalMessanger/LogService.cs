@@ -10,10 +10,12 @@ namespace LocalMessangerServer
     public class LogService
     {
         private readonly AppDbContext _dbContext;
+        private readonly Action<string>? _logToUI;
 
-        public LogService(AppDbContext dbContext)
+        public LogService(AppDbContext dbContext, Action<string>? logToUI = null)
         {
             _dbContext = dbContext;
+            _logToUI = logToUI;
         }
 
         public async Task LogAsync(string message, string logLevel = "Info")
@@ -25,8 +27,10 @@ namespace LocalMessangerServer
                 Timestamp = DateTime.UtcNow
             };
 
-            await _dbContext.ServerLogs.AddAsync(log);
+            _dbContext.ServerLogs.Add(log);
             await _dbContext.SaveChangesAsync();
+
+            _logToUI?.Invoke($"[{logLevel}] {message} {DateTime.Now}");
         }
 
         public void Log(string message, string logLevel = "Info")
@@ -40,7 +44,8 @@ namespace LocalMessangerServer
 
             _dbContext.ServerLogs.Add(log);
             _dbContext.SaveChanges();
+
+            _logToUI?.Invoke($"[{logLevel}] {message} {DateTime.Now}");
         }
     }
-
 }

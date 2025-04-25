@@ -1,23 +1,56 @@
-﻿using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Linq;
 
 namespace LocalMessangerClient;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private ChatClient? _chatClient;
+    private readonly string _username;
+
+    public MainWindow(ChatClient chatClient, string username)
     {
         InitializeComponent();
+
+        _chatClient = chatClient;
+        _chatClient.MessageReceived += OnMessageReceived;
+        _username = username;
+    }
+
+    private void OnMessageReceived(string message)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ChatHistoryPanel.Children.Add(new TextBlock { Text = message, Margin = new Thickness(5) });
+        });
+    }
+
+    private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_chatClient != null && !string.IsNullOrWhiteSpace(MessageTextBox.Text) && !string.IsNullOrWhiteSpace(ReceiverTextBox.Text))
+        {
+            var receiver = ReceiverTextBox.Text.Trim();
+            var content = MessageTextBox.Text.Trim();
+
+            try
+            {
+                await _chatClient.SendMessageAsync(_username, receiver, content); // Використовуємо _username як відправника
+                MessageTextBox.Clear();
+            }
+            catch
+            {
+                MessageBox.Show("Failed to send the message.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        else
+        {
+            MessageBox.Show("Please enter a message and a receiver.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void Window_Closed(object sender, System.EventArgs e)
+    {
+        _chatClient?.Disconnect();
     }
 }

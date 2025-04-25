@@ -1,35 +1,52 @@
 ﻿using LocalMessangerServer;
 using LocalMessangerServer.EF;
 using System.Collections.ObjectModel;
-using System.Text;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace LocalMessanger;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : Window, INotifyPropertyChanged
 {
     AppDbContext db = new AppDbContext();
     LogService logService;
     ChatServer chatServer;
-    int port = 25001;
 
+    int port = 25001;
     public ObservableCollection<string> ConnectedUsers => chatServer.ConnectedUsers;
+
+    private string _serverLog = string.Empty;
+    public string ServerLog
+    {
+        get => _serverLog;
+        set
+        {
+            _serverLog = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void AppendLog(string log)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ServerLog += log + Environment.NewLine;
+        });
+    }
 
     public MainWindow()
     {
         InitializeComponent();
-        logService = new LogService(db);
+        logService = new LogService(db, log => AppendLog(log));
         chatServer = new ChatServer(port, logService);
 
         this.DataContext = this;
@@ -57,21 +74,5 @@ public partial class MainWindow : Window
             button.Content = "Start Server";
             chatServer.Stop();
         }
-    }
-
-    private void Button_MouseEnter(object sender, MouseEventArgs e)
-    {
-
-    }
-
-    private void Button_MouseLeave(object sender, MouseEventArgs e)
-    {
-
-    }
-
-    private void BroadcastButton_Click(object sender, RoutedEventArgs e)
-    {
-      
-
     }
 }
