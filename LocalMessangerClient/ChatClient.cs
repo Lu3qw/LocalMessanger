@@ -24,7 +24,7 @@ public class ChatClient
         _reader = new StreamReader(stream, Encoding.UTF8);
         _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
 
-        // Start the receive loop.
+        // Запускаємо фоновий цикл прийому повідомлень
         _ = StartReceivingAsync();
     }
 

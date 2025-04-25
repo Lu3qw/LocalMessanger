@@ -20,20 +20,8 @@ public partial class MainWindow : Window
         // Update header TextBlock with the logged in username.
         UsernameDisplayTextBlock.Text = $"Username: {_username}";
 
-        // Start receiving messages in the background.
-        _ = StartReceiving();
-    }
-
-    private async Task StartReceiving()
-    {
-        try
-        {
-            await _chatClient.StartReceivingAsync();
-        }
-        catch (System.Exception ex)
-        {
-            MessageBox.Show($"Error receiving messages: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        // Subscribe to the MessageReceived event.
+        _chatClient.MessageReceived += OnMessageReceived;
     }
 
     private void OnMessageReceived(string message)

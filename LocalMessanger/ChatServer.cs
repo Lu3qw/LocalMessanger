@@ -217,7 +217,6 @@ public class ChatServer
                     {
                         try
                         {
-                            // Use the already created StreamWriter for the receiver.
                             if (_clientWriters.TryGetValue(kvp.Key, out var receiverWriter))
                             {
                                 await receiverWriter.WriteLineAsync($"message:{sender}:{content}");
