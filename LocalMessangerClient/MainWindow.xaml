@@ -4,16 +4,29 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalMessangerClient"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="Local Messenger Client" Height="600" Width="1000" WindowStartupLocation="CenterScreen" WindowStyle="SingleBorderWindow">
+    <Window.Resources>
+        <local:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="LightGreen" FalseBrush="White"/>
+        <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
+
+        <ObjectDataProvider MethodName="GetValues"
+                      ObjectType="{x:Type sys:Enum}"
+                      x:Key="StatusValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:UserStatus"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+    </Window.Resources>
+
     <Grid Background="GhostWhite">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
             <!-- Header -->
             <RowDefinition Height="*"/>
             <!-- Main Content -->
-            <RowDefinition Height="50"/>
-            <!-- Footer -->
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -25,20 +38,34 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Background="CornflowerBlue" VerticalAlignment="Center">
-            <TextBlock Text="Local Messenger" FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Top" Margin="10"/>
+            <TextBlock Text="Local Messenger" FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Top" Margin="8"/>
             <Button Content="Change Theme" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
             <Button Content="Change Language" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
-            <!-- Updated TextBlock with x:Name for username display -->
-            <TextBlock x:Name="UsernameDisplayTextBlock" Text="Username: [YourUsername]" FontSize="16" FontWeight="Normal" Foreground="White" VerticalAlignment="Top" Margin="300,10,10,10"/>
+
+
+            <Button Content="Block" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold" Click="BlockButton_Click"/>
+            <ComboBox   Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"
+                        ItemsSource="{Binding Source={StaticResource StatusValues}}"
+                        SelectedItem="{Binding Path=SelectedUserStatus, Mode=TwoWay}"
+                        SelectionChanged="StatusComboBox_SelectionChanged"
+                        />
+            
+            <TextBlock x:Name="UsernameDisplayTextBlock" Text="Username: [YourUsername]" FontSize="16" FontWeight="Normal" Foreground="White" VerticalAlignment="Top" Margin="30,10,10,10"/>
         </StackPanel>
 
 
         <!-- Chat List -->
-        <ListBox x:Name="ChatListBox" Grid.Row="2" Grid.Column="0" Margin="10" Background="WhiteSmoke" Foreground="Black" BorderBrush="Gray" BorderThickness="1">
-        </ListBox>
-
-
-        <TextBox x:Name="ReceiverTextBox" Grid.Row="2" Grid.Column="0" Width="200" Height="30" Margin="5" VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="10">
+            <TextBox x:Name="UserSearchTextBox"
+                    Width="260" Height="30"
+                    Margin="0,0,0,5"
+                    TextChanged="UserSearchTextBox_TextChanged"/>
+            <ListBox x:Name="ChatListBox"
+             Height="470"
+             Background="WhiteSmoke"
+             BorderBrush="Gray" BorderThickness="1"
+             SelectionChanged="ChatListBox_SelectionChanged"/>
+        </StackPanel>
 
 
         <!-- Chat Content -->
@@ -51,16 +78,72 @@
             </Grid.RowDefinitions>
 
             <!-- Chat History -->
-            <ScrollViewer Grid.Row="0" Margin="10" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="ChatHistoryPanel">
-                    
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- Message Input -->
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="6">
+                <ScrollViewer>
+                    <ItemsControl x:Name="ChatHistoryList" ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="12" Padding="8" Margin="5"
+                                        Background="{Binding IsMe, Converter={StaticResource BoolToBrushConverter}}"
+                                        HorizontalAlignment="{Binding IsMe, Converter={StaticResource BoolToAlignmentConverter}}"
+                                        MaxWidth="300">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Time}" FontSize="10" 
+                                         HorizontalAlignment="Right" Opacity="0.6" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10">
-                <TextBox x:Name="MessageTextBox" Width="400" Height="30" Margin="5" VerticalAlignment="Center" Background="White" Foreground="Black" BorderBrush="Gray" BorderThickness="1" HorizontalAlignment="Center" TextAlignment="Justify"/>
+                <TextBox x:Name="MessageTextBox"
+                         Width="400" Height="30"
+                         Margin="0"
+                         Background="White"
+                         BorderBrush="Gray"
+                         BorderThickness="1"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Bottom"
+                         TextAlignment="Justify"/>
                 <Button Content="Send" Width="100" Height="50" Margin="5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Click="SendMessageButton_Click"/>
+                <ToggleButton x:Name="EmojiToggleButton"
+                  Content="😊"
+                  Width="40" Height="30"
+                  Background="CornflowerBlue" 
+                  Foreground="White" 
+                  FontWeight="Bold" 
+                  HorizontalAlignment="Center"
+                  Margin="5"
+                  VerticalAlignment="Center"
+                  Checked="EmojiToggleButton_Checked"
+                  Unchecked="EmojiToggleButton_Unchecked"/>
+                <Popup x:Name="EmojiPopup"
+           PlacementTarget="{Binding ElementName=EmojiToggleButton}"
+           Placement="Top"
+           StaysOpen="False"
+           AllowsTransparency="True"
+           PopupAnimation="Fade"
+           Closed="EmojiPopup_Closed">
+                    <Border Background="WhiteSmoke" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
+                        <ScrollViewer Height="150" Width="200">
+                            <UniformGrid Columns="6" Margin="5">
+                                <Button Content="😀" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="😂" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="😍" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="😢" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="👍" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="🙏" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="🎉" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="😎" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="🔥" Click="EmojiButton_Click" Margin="2"/>
+                                <Button Content="💡" Click="EmojiButton_Click" Margin="2"/>
+                            </UniformGrid>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
             </StackPanel>
         </Grid>
     </Grid>

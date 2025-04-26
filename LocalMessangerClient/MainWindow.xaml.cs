@@ -1,102 +1,242 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
 
-namespace LocalMessangerClient;
-
-public partial class MainWindow : Window
+namespace LocalMessangerClient
 {
-    private ChatClient? _chatClient;
-    private readonly string _username;
 
-    // The constructor now receives the already-connected ChatClient and the username.
-    public MainWindow(ChatClient chatClient, string username)
+    public enum UserStatus { Online, Offline, DoNotDisturb, Away }
+
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
-        _chatClient = chatClient;
-        _username = username;
+        private ChatClient? _chatClient;
+        private readonly string _username;
+        public UserStatus SelectedUserStatus { get; set; }
+        public ObservableCollection<string> AllUsers { get; } = new ObservableCollection<string>();
+        private CollectionViewSource FilteredUsersView { get; } = new CollectionViewSource();
+        public ObservableCollection<MessageViewModel> Messages { get; } = new();
+        public MainWindow(ChatClient chatClient, string username)
+        {
+            InitializeComponent();
+            _chatClient = chatClient;
+            _username = username;
 
-        // Update header TextBlock with the logged in username.
-        UsernameDisplayTextBlock.Text = $"Username: {_username}";
+            UsernameDisplayTextBlock.Text = $"Username: {_username}";
+            _chatClient.MessageReceived += OnMessageReceived;
 
-        // Subscribe to the MessageReceived event.
-        _chatClient.MessageReceived += OnMessageReceived;
-    }
+            FilteredUsersView.Source = AllUsers;
+            FilteredUsersView.Filter += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(UserSearchTextBox.Text))
+                    e.Accepted = true;
+                else
+                    e.Accepted = ((string)e.Item).IndexOf(UserSearchTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+            };
+            ChatListBox.ItemsSource = FilteredUsersView.View;
+            ChatHistoryList.ItemsSource = Messages;
+            SelectedUserStatus = UserStatus.Online;
 
-    private void OnMessageReceived(string message)
-    {
-        try
+
+            _ = LoadUserListAsync();
+        }
+
+        public class MessageViewModel
+        {
+            public string Content { get; set; }
+            public string Time { get; set; }
+            public bool IsMe { get; set; }
+        }
+
+        private async Task LoadUserListAsync()
+        {
+            var response = await _chatClient!.SendRequestAsync("list_users");
+            var users = response.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                AllUsers.Clear();
+                foreach (var u in users.Where(u => u != _username))
+                    AllUsers.Add(u);
+            });
+        }
+
+        private void OnMessageReceived(string message)
         {
             Dispatcher.Invoke(() =>
             {
-                // Check if the message follows the "message:sender:content" structure.
-                var parts = message.Split(':');
-                if (parts.Length >= 3 && parts[0] == "message")
+                if (message.StartsWith("notify_status:"))
                 {
-                    var sender = parts[1];
-                    var content = string.Join(":", parts.Skip(2));
-                    ChatHistoryPanel.Children.Add(new TextBlock
-                    {
-                        Text = $"{sender}: {content}",
-                        Margin = new Thickness(5)
-                    });
+                    var parts = message.Split(':');
+                    var who = parts[1];
+                    var st = (UserStatus)Enum.Parse(typeof(UserStatus), parts[2]);
+
+                    UpdateUserStatusInUI(who, st);
+                    return;
                 }
-                else
+                if (!message.StartsWith("message:")) return;
+                var body = message.Substring("message:".Length);
+                var pipe = body.LastIndexOf('|');
+                if (pipe < 0) return;
+
+                var head = body.Substring(0, pipe);      // "sender:content"
+                var tsText = body.Substring(pipe + 1);   // timestamp
+                var colon = head.IndexOf(':');
+                if (colon < 0) return;
+
+                var sender = head.Substring(0, colon);
+                var content = head.Substring(colon + 1);
+
+                if (!DateTime.TryParse(tsText, null,
+                      System.Globalization.DateTimeStyles.RoundtripKind, out var sentAt))
+                    sentAt = DateTime.UtcNow;
+
+                Messages.Add(new MessageViewModel
                 {
-                    ChatHistoryPanel.Children.Add(new TextBlock
-                    {
-                        Text = message,
-                        Margin = new Thickness(5)
-                    });
-                }
+                    Content = content,
+                    Time = sentAt.ToLocalTime().ToString("HH:mm"),
+                    IsMe = sender == _username
+                });
             });
         }
-        catch (System.Exception ex)
-        {
-            MessageBox.Show($"Error updating UI: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
 
-    private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_chatClient != null &&
-            !string.IsNullOrWhiteSpace(MessageTextBox.Text) &&
-            !string.IsNullOrWhiteSpace(ReceiverTextBox.Text))
+        private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            var receiver = ReceiverTextBox.Text.Trim();
+            if (ChatListBox.SelectedItem is not string selectedUser)
+            {
+                MessageBox.Show("Select chat.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             var content = MessageTextBox.Text.Trim();
-            try
-            {
-                // Use _username as the sender.
-                await _chatClient.SendMessageAsync(_username, receiver, content);
+            if (string.IsNullOrWhiteSpace(content)) return;
 
-                // Display the sent message in the chat history.
-                Dispatcher.Invoke(() =>
-                {
-                    ChatHistoryPanel.Children.Add(new TextBlock
-                    {
-                        Text = $"You: {content}",
-                        Margin = new Thickness(5),
-                        HorizontalAlignment = HorizontalAlignment.Right
-                    });
-                });
+            await _chatClient!.SendMessageAsync(_username, selectedUser, content);
 
-                MessageTextBox.Clear();
-            }
-            catch (System.Exception ex)
+            Messages.Add(new MessageViewModel
             {
-                MessageBox.Show($"Failed to send the message: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                Content = content,
+                Time = DateTime.Now.ToString("HH:mm"),
+                IsMe = true
+            });
+            MessageTextBox.Clear();
         }
-        else
+
+
+        private void UserSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            MessageBox.Show("Please enter a message and a receiver.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            FilteredUsersView.View.Refresh();
         }
-    }
 
-    private void Window_Closed(object sender, System.EventArgs e)
-    {
-        _chatClient?.Disconnect();
+        private async void ChatListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ChatListBox.SelectedItem is string partner)
+                await LoadChatHistoryAsync(partner);
+        }
+
+        private async Task LoadChatHistoryAsync(string partner)
+        {
+            Messages.Clear();
+
+            var response = await _chatClient!.SendRequestAsync($"get_history:{_username}:{partner}");
+            var entries = response.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < entries.Length; i += 2)
+            {
+                var head = entries[i];       // "sender:content"
+                var tsText = entries[i + 1]; // timestamp
+
+                var colon = head.IndexOf(':');
+                if (colon < 0) continue;
+
+                var sender = head.Substring(0, colon);
+                var content = head.Substring(colon + 1);
+
+                if (!DateTime.TryParse(tsText, null,
+                      System.Globalization.DateTimeStyles.RoundtripKind, out var sentAt))
+                    sentAt = DateTime.UtcNow;
+
+                Messages.Add(new MessageViewModel
+                {
+                    Content = content,
+                    Time = sentAt.ToLocalTime().ToString("HH:mm"),
+                    IsMe = sender == _username
+                });
+            }
+        }
+
+
+        private void UpdateUserStatusInUI(string user, UserStatus status)
+        {
+            // наприклад, змінюємо колір фону в списку
+            var item = ChatListBox.Items.Cast<string>().FirstOrDefault(u => u == user);
+            if (item != null)
+            {
+                var container = (ListBoxItem)ChatListBox.ItemContainerGenerator.ContainerFromItem(item);
+                if (container != null)
+                {
+                    container.Background = status switch
+                    {
+                        UserStatus.Online => Brushes.LightGreen,
+                        UserStatus.Offline => Brushes.LightGray,
+                        UserStatus.DoNotDisturb => Brushes.IndianRed,
+                        UserStatus.Away => Brushes.Khaki,
+                        _ => Brushes.White
+                    };
+                }
+            }
+        }
+
+
+        private void EmojiToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            EmojiPopup.IsOpen = true;
+        }
+
+        private void EmojiToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            EmojiPopup.IsOpen = false;
+        }
+
+        private void EmojiPopup_Closed(object sender, EventArgs e)
+        {
+            EmojiToggleButton.IsChecked = false;
+        }
+
+        private void EmojiButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Content is string emoji)
+            {
+                var tb = MessageTextBox;
+                int idx = tb.CaretIndex;
+                tb.Text = tb.Text.Insert(idx, emoji);
+                tb.CaretIndex = idx + emoji.Length;
+                tb.Focus();
+            }
+        }
+
+        private async void BlockButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ChatListBox.SelectedItem is not string toBlock) return;
+            var result = await _chatClient.BlockUserAsync(_username, toBlock);
+            if (result == "success")
+                MessageBox.Show($"You blocked {toBlock}");
+            else
+                MessageBox.Show($"Block failed: {result}");
+        }
+
+        private async void StatusComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_chatClient == null) return;
+            await _chatClient.ChangeStatusAsync(_username, SelectedUserStatus.ToString());
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            _chatClient?.Disconnect();
+        }
     }
 }

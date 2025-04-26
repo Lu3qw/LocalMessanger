@@ -4,6 +4,7 @@ using LocalMessangerServer.EF;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LocalMessangerServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250425160857_ExpandPasswordHashColumn")]
+    partial class ExpandPasswordHashColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,32 +27,6 @@ namespace LocalMessangerServer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("LocalMessangerServer.EF.Block", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BlockedId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BlockerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BlockedId");
-
-                    b.HasIndex("BlockerId");
-
-                    b.ToTable("Blocks");
-                });
 
             modelBuilder.Entity("LocalMessangerServer.EF.Message", b =>
                 {
@@ -120,9 +97,6 @@ namespace LocalMessangerServer.Migrations
                         .HasMaxLength(72)
                         .HasColumnType("nvarchar(72)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -160,25 +134,6 @@ namespace LocalMessangerServer.Migrations
                     b.ToTable("UserLogs");
                 });
 
-            modelBuilder.Entity("LocalMessangerServer.EF.Block", b =>
-                {
-                    b.HasOne("LocalMessangerServer.EF.User", "Blocked")
-                        .WithMany("BlocksReceived")
-                        .HasForeignKey("BlockedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LocalMessangerServer.EF.User", "Blocker")
-                        .WithMany("BlocksInitiated")
-                        .HasForeignKey("BlockerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Blocked");
-
-                    b.Navigation("Blocker");
-                });
-
             modelBuilder.Entity("LocalMessangerServer.EF.Message", b =>
                 {
                     b.HasOne("LocalMessangerServer.EF.User", "Receiver")
@@ -211,10 +166,6 @@ namespace LocalMessangerServer.Migrations
 
             modelBuilder.Entity("LocalMessangerServer.EF.User", b =>
                 {
-                    b.Navigation("BlocksInitiated");
-
-                    b.Navigation("BlocksReceived");
-
                     b.Navigation("Logs");
 
                     b.Navigation("ReceivedMessages");

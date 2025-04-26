@@ -11,6 +11,7 @@ namespace LocalMessangerServer.EF
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Block> Blocks { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<UserLog> UserLogs { get; set; }
         public DbSet<ServerLog> ServerLogs { get; set; }
@@ -33,6 +34,20 @@ namespace LocalMessangerServer.EF
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<Block>()
+                    .HasOne(b => b.Blocker)
+                    .WithMany(u => u.BlocksInitiated)
+                    .HasForeignKey(b => b.BlockerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Block>()
+                .HasOne(b => b.Blocked)
+                .WithMany(u => u.BlocksReceived)
+                .HasForeignKey(b => b.BlockedId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

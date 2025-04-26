@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
 public class ChatClient
-{
+{   
     private readonly TcpClient _client;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
 
     public event Action<string>? MessageReceived;
 
-    // Queue to match request responses.
     private readonly ConcurrentQueue<TaskCompletionSource<string>> _responseQueue = new();
 
     public ChatClient(string serverAddress, int port)
@@ -24,7 +23,7 @@ public class ChatClient
         _reader = new StreamReader(stream, Encoding.UTF8);
         _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
 
-        // Запускаємо фоновий цикл прийому повідомлень
+        
         _ = StartReceivingAsync();
     }
 
@@ -38,14 +37,12 @@ public class ChatClient
                 if (message == null)
                     break;
 
-                // If there is a pending request, assume its response.
                 if (_responseQueue.TryDequeue(out var tcs))
                 {
                     tcs.TrySetResult(message);
                 }
                 else
                 {
-                    // Otherwise, it's an asynchronous message.
                     MessageReceived?.Invoke(message);
                 }
             }
@@ -60,14 +57,12 @@ public class ChatClient
     {
         if (_client.Connected)
         {
-            // Prepare a TCS to wait for a response.
             var tcs = new TaskCompletionSource<string>();
             _responseQueue.Enqueue(tcs);
 
             var request = $"{action}:{username}:{password}";
             await _writer.WriteLineAsync(request);
 
-            // Wait for the response from the receive loop.
             var response = await tcs.Task;
             return response ?? "error";
         }
@@ -82,6 +77,23 @@ public class ChatClient
             await _writer.WriteLineAsync(message);
         }
     }
+
+    public async Task<string> SendRequestAsync(string req)
+    {
+        var tcs = new TaskCompletionSource<string>();
+        _responseQueue.Enqueue(tcs);
+        await _writer.WriteLineAsync(req);
+        return await tcs.Task;
+    }
+
+    public Task<string> BlockUserAsync(string me, string toBlock)
+  => SendRequestAsync($"block:{me}:{toBlock}");
+
+    /// <summary>Змінює статус на server.</summary>
+    public Task<string> ChangeStatusAsync(string user, string status)
+      => SendRequestAsync($"status:{user}:{status}");
+
+
 
     public void Disconnect()
     {

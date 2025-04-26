@@ -1,7 +1,7 @@
 ﻿<Window x:Class="LocalMessangerClient.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Login" Height="300" Width="400" WindowStartupLocation="CenterScreen">
+        Title="Login/Register" Height="300" Width="400" WindowStartupLocation="CenterScreen">
     <Grid Background="GhostWhite">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -17,8 +17,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Content="Login" Width="100" Height="30" Margin="5" Click="LoginButton_Click"/>
-            <Button Content="Register" Width="100" Height="30" Margin="5" Click="RegisterButton_Click"/>
+            <Button Content="Login" Width="100" Height="30" Margin="5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Click="LoginButton_Click"/>
+            <Button Content="Register" Width="100" Height="30" Margin="5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Click="RegisterButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

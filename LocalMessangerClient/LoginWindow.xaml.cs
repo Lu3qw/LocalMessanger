@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-
+using BCrypt.Net;
 namespace LocalMessangerClient;
 
 public partial class LoginWindow : Window
@@ -13,7 +13,6 @@ public partial class LoginWindow : Window
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
-        // Якщо існує попереднє підключення — закриваємо його
         if (_chatClient != null)
         {
             _chatClient.Disconnect();
@@ -31,7 +30,7 @@ public partial class LoginWindow : Window
         }
 
         var username = UsernameTextBox.Text.Trim();
-        var password = PasswordBox.Password.Trim();
+        var password = PasswordBox.Password;
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
@@ -41,15 +40,23 @@ public partial class LoginWindow : Window
 
         try
         {
-            var response = await _chatClient.SendAuthRequestAsync("login", username, password);
+            var storedHash = await _chatClient.SendRequestAsync($"get_salt:{username}");
+            if (storedHash.StartsWith("error:"))
+            {
+                MessageBox.Show("User not found", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var hash = BCrypt.Net.BCrypt.HashPassword(password, storedHash);
+            var response = await _chatClient.SendAuthRequestAsync("login", username, hash);
             if (response == "success")
             {
                 MessageBox.Show("Login successful!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // Передаємо ім'я користувача в MainWindow та встановлюємо його як головне вікно програми
-                var mainWindow = new MainWindow(_chatClient, username);
-                Application.Current.MainWindow = mainWindow;
-                mainWindow.Show();
+                var mw = new MainWindow(_chatClient, username);
+                Application.Current.MainWindow = mw;
+                this.Closing -= Window_Closing;
+                mw.Show();
                 this.Close();
             }
             else
@@ -57,7 +64,7 @@ public partial class LoginWindow : Window
                 MessageBox.Show("Invalid username or password.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        catch (Exception ex)
+        catch (Exception ex)    
         {
             MessageBox.Show($"Error during login: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -83,7 +90,7 @@ public partial class LoginWindow : Window
         }
 
         var username = UsernameTextBox.Text.Trim();
-        var password = PasswordBox.Password.Trim();
+        var password = PasswordBox.Password;
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
@@ -91,9 +98,11 @@ public partial class LoginWindow : Window
             return;
         }
 
+        var hash = BCrypt.Net.BCrypt.HashPassword(password);
+
         try
         {
-            var response = await _chatClient.SendAuthRequestAsync("register", username, password);
+            var response = await _chatClient.SendAuthRequestAsync("register", username, hash);
             if (response == "success")
                 MessageBox.Show("Registration successful!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             else

@@ -1,5 +1,5 @@
+
 using LocalMessangerServer.EF;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,56 +16,43 @@ namespace LocalMessangerServer
             _logService = logService;
         }
 
-        public async Task<bool> RegisterAsync(string username, string password)
+        public async Task<bool> RegisterAsync(string username, string passwordHashFromClient)
         {
             if (_dbContext.Users.Any(u => u.Username == username))
             {
-                await _logService.LogAsync($"Registration failed: Username '{username}' is already taken.", "Warning");
+                await _logService.LogAsync($"Registration failed: '{username}' taken.", "Warning");
                 return false;
             }
 
-            var user = new User
+            _dbContext.Users.Add(new User
             {
                 Username = username,
-                PasswordHash = HashPassword(password),
+                PasswordHash = passwordHashFromClient,   
                 CreatedAt = DateTime.UtcNow
-            };
+            });
 
-            _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
-
-            await _logService.LogAsync($"User '{username}' registered successfully.", "Info");
+            await _logService.LogAsync($"User '{username}' registered.", "Info");
             return true;
         }
 
-        public async Task<bool> LoginAsync(string username, string password)
+        public async Task<bool> LoginAsync(string username, string passwordHashFromClient)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
             if (user == null)
             {
-                await _logService.LogAsync($"Login failed: User '{username}' not found.", "Warning");
+                await _logService.LogAsync($"Login failed: '{username}' not found.", "Warning");
                 return false;
             }
 
-            var isValid = VerifyPassword(password, user.PasswordHash);
-            if (!isValid)
+            if (user.PasswordHash != passwordHashFromClient)
             {
-                await _logService.LogAsync($"Login failed: Invalid password for user '{username}'.", "Warning");
+                await _logService.LogAsync($"Login failed: wrong password for '{username}'.", "Warning");
                 return false;
             }
 
-            await _logService.LogAsync($"User '{username}' logged in successfully.", "Info");
+            await _logService.LogAsync($"User '{username}' logged in.", "Info");
             return true;
-        }
-
-        private string HashPassword(string password)
-        {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
-
-        private bool VerifyPassword(string password, string hash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }
 }
