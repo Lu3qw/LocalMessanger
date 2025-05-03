@@ -10,7 +10,7 @@
     <Window.Resources>
         <local:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="LightGreen" FalseBrush="White"/>
         <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
-
+        <local:StatusToBrushConverter x:Key="StatusToBrush"/>
         <ObjectDataProvider MethodName="GetValues"
                       ObjectType="{x:Type sys:Enum}"
                       x:Key="StatusValues">
@@ -24,16 +24,13 @@
     <Grid Background="GhostWhite">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
-            <!-- Header -->
+
             <RowDefinition Height="*"/>
-            <!-- Main Content -->
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
-            <!-- Chat List -->
             <ColumnDefinition Width="*"/>
-            <!-- Chat Content -->
         </Grid.ColumnDefinitions>
 
         <!-- Header -->
@@ -56,10 +53,15 @@
 
         <!-- Chat List -->
         <StackPanel Grid.Row="1" Grid.Column="0" Margin="10">
-            <TextBox x:Name="UserSearchTextBox"
-                    Width="260" Height="30"
-                    Margin="0,0,0,5"
-                    TextChanged="UserSearchTextBox_TextChanged"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBox x:Name="UserSearchTextBox"
+                         Width="200" Height="30"
+                         Margin="0,0,0,5"
+                         TextChanged="UserSearchTextBox_TextChanged"
+                         HorizontalAlignment="Left"/>
+                <Button x:Name="ChatListUpdateButton" Content="Update" Width="60" Height="30" Margin="15,0,0,5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" Click="ChatListUpdateButton_Click"/>
+            </StackPanel>
+            
             <ListBox x:Name="ChatListBox"
              Height="470"
              Background="WhiteSmoke"
@@ -72,9 +74,7 @@
         <Grid Grid.Row="1" Grid.Column="1" Margin="10" Background="WhiteSmoke">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <!-- Chat History -->
                 <RowDefinition Height="50"/>
-                <!-- Message Input -->
             </Grid.RowDefinitions>
 
             <!-- Chat History -->

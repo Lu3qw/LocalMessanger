@@ -89,7 +89,6 @@ public class ChatClient
     public Task<string> BlockUserAsync(string me, string toBlock)
   => SendRequestAsync($"block:{me}:{toBlock}");
 
-    /// <summary>«м≥нюЇ статус на server.</summary>
     public Task<string> ChangeStatusAsync(string user, string status)
       => SendRequestAsync($"status:{user}:{status}");
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using LocalMessangerClient.ViewModels;
 
 namespace LocalMessangerClient
 {
@@ -44,13 +46,9 @@ namespace LocalMessangerClient
 
 
             _ = LoadUserListAsync();
-        }
 
-        public class MessageViewModel
-        {
-            public string Content { get; set; }
-            public string Time { get; set; }
-            public bool IsMe { get; set; }
+
+            DataContext = this;
         }
 
         private async Task LoadUserListAsync()
@@ -124,19 +122,6 @@ namespace LocalMessangerClient
             });
             MessageTextBox.Clear();
         }
-
-
-        private void UserSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            FilteredUsersView.View.Refresh();
-        }
-
-        private async void ChatListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ChatListBox.SelectedItem is string partner)
-                await LoadChatHistoryAsync(partner);
-        }
-
         private async Task LoadChatHistoryAsync(string partner)
         {
             Messages.Clear();
@@ -168,10 +153,8 @@ namespace LocalMessangerClient
             }
         }
 
-
         private void UpdateUserStatusInUI(string user, UserStatus status)
         {
-            // наприклад, змінюємо колір фону в списку
             var item = ChatListBox.Items.Cast<string>().FirstOrDefault(u => u == user);
             if (item != null)
             {
@@ -191,6 +174,16 @@ namespace LocalMessangerClient
         }
 
 
+        private void UserSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilteredUsersView.View.Refresh();
+        }
+
+        private async void ChatListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ChatListBox.SelectedItem is string partner)
+                await LoadChatHistoryAsync(partner);
+        }
         private void EmojiToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             EmojiPopup.IsOpen = true;
@@ -231,12 +224,25 @@ namespace LocalMessangerClient
         private async void StatusComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_chatClient == null) return;
-            await _chatClient.ChangeStatusAsync(_username, SelectedUserStatus.ToString());
+            if (sender is ComboBox cb && cb.SelectedItem is UserStatus st)
+            {
+                await _chatClient.ChangeStatusAsync(_username, st.ToString());
+            }
         }
+
 
         private void Window_Closed(object sender, EventArgs e)
         {
             _chatClient?.Disconnect();
+        }
+
+        private void ChatListUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            //if (_chatClient == null) return;
+            //if (sender is Button btn)
+            //{
+            //    LoadUserListAsync();
+            //}
         }
     }
 }
