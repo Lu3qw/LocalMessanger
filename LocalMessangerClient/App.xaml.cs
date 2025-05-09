@@ -1,6 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
 
 namespace LocalMessangerClient;
 
@@ -9,5 +7,11 @@ namespace LocalMessangerClient;
 /// </summary>
 public partial class App : Application
 {
-}
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
 
+        // Застосовуємо базову тему Light (або буде замінена на ту, що збережена в реєстрі)
+        ThemeManager.ChangeTheme(ThemeType.Light);
+    }
+}

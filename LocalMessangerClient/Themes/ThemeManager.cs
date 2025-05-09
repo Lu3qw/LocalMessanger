@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Windows;
+using System.Linq;
+using System.Windows.Media;
 
 namespace LocalMessangerClient
 {
@@ -11,6 +14,9 @@ namespace LocalMessangerClient
 
     public static class ThemeManager
     {
+        private const string RegistryKeyPath = @"Software\LocalMessanger";
+        private const string RegistryValueName = "SelectedTheme";
+        private static readonly Uri ThemeDictionaryUri = new Uri("Themes/ThemeDictionary.xaml", UriKind.Relative);
         private static readonly Uri LightThemeUri = new Uri("Themes/LightTheme.xaml", UriKind.Relative);
         private static readonly Uri DarkThemeUri = new Uri("Themes/DarkTheme.xaml", UriKind.Relative);
 
@@ -20,39 +26,56 @@ namespace LocalMessangerClient
         {
             var appDictionaries = Application.Current.Resources.MergedDictionaries;
 
-            ResourceDictionary themeDictionary = null;
-            foreach (var dict in appDictionaries)
+            // Знаходимо усі словники тем
+            ResourceDictionary themeDictionary = appDictionaries.FirstOrDefault(d =>
+                d.Source != null &&
+                (d.Source.OriginalString.EndsWith("LightTheme.xaml") ||
+                 d.Source.OriginalString.EndsWith("DarkTheme.xaml")));
+
+            ResourceDictionary baseThemeDictionary = appDictionaries.FirstOrDefault(d =>
+                d.Source != null &&
+                d.Source.OriginalString.EndsWith("ThemeDictionary.xaml"));
+
+            // Якщо базовий словник теми не знайдено, додаємо його
+            if (baseThemeDictionary == null)
             {
-                if (dict.Source != null &&
-                    (dict.Source.OriginalString.EndsWith("LightTheme.xaml") ||
-                     dict.Source.OriginalString.EndsWith("DarkTheme.xaml")))
-                {
-                    themeDictionary = dict;
-                    break;
-                }
+                baseThemeDictionary = new ResourceDictionary { Source = ThemeDictionaryUri };
+                appDictionaries.Add(baseThemeDictionary);
             }
 
-            var newThemeDictionary = new ResourceDictionary();
+            // Замінюємо словник конкретної теми або додаємо новий
+            if (themeDictionary != null)
+                appDictionaries.Remove(themeDictionary);
+
+            ResourceDictionary newThemeDictionary;
             if (theme == ThemeType.Dark)
             {
-                newThemeDictionary.Source = DarkThemeUri;
+                newThemeDictionary = new ResourceDictionary { Source = DarkThemeUri };
                 CurrentTheme = ThemeType.Dark;
             }
             else
             {
-                newThemeDictionary.Source = LightThemeUri;
+                newThemeDictionary = new ResourceDictionary { Source = LightThemeUri };
                 CurrentTheme = ThemeType.Light;
             }
 
-            if (themeDictionary != null)
+            appDictionaries.Add(newThemeDictionary);
+
+            // Зберігаємо вибір теми у реєстрі
+            SaveThemeToRegistry(theme.ToString());
+        }
+
+        private static void SaveThemeToRegistry(string themeName)
+        {
+            try
             {
-                int index = appDictionaries.IndexOf(themeDictionary);
-                appDictionaries.Remove(themeDictionary);
-                appDictionaries.Insert(index, newThemeDictionary);
+                RegistryKey key = Registry.CurrentUser.CreateSubKey(RegistryKeyPath);
+                key?.SetValue(RegistryValueName, themeName);
+                key?.Close();
             }
-            else
+            catch (Exception ex)
             {
-                appDictionaries.Add(newThemeDictionary);
+                MessageBox.Show($"Error saving theme to registry: {ex.Message}");
             }
         }
 

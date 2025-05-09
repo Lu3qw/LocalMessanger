@@ -8,8 +8,6 @@ public partial class LoginWindow : Window
     private const string RegistryKeyPath = @"Software\LocalMessanger";
     private const string RegistryValueName = "SelectedTheme";
 
-
-
     private ChatClient? _chatClient;
 
     public LoginWindow()
@@ -28,13 +26,14 @@ public partial class LoginWindow : Window
                 object theme = key.GetValue(RegistryValueName);
                 if (theme != null)
                 {
-                    ApplyTheme(theme.ToString());
+                    ThemeManager.ChangeTheme(theme.ToString() == "Dark" ? ThemeType.Dark : ThemeType.Light);
                 }
                 key.Close();
             }
             else
             {
-                ApplyTheme("Light");
+                // Використовуємо ThemeManager для встановлення теми
+                ThemeManager.ChangeTheme(ThemeType.Light);
             }
         }
         catch (Exception ex)
@@ -42,28 +41,6 @@ public partial class LoginWindow : Window
             MessageBox.Show($"Error loading theme: {ex.Message}");
         }
     }
-
-    private void ApplyTheme(string themeName)
-    {
-
-        var dictionaries = Application.Current.Resources.MergedDictionaries;
-        dictionaries.Clear();
-
-        var themeDict = new ResourceDictionary();
-        switch (themeName)
-        {
-            case "Dark":
-                themeDict.Source = new Uri("Themes/DarkTheme.xaml", UriKind.Relative);
-                break;
-            default:
-                themeDict.Source = new Uri("Themes/LightTheme.xaml", UriKind.Relative);
-                break;
-        }
-        dictionaries.Add(themeDict);
-    }
-
-
-
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
@@ -118,7 +95,7 @@ public partial class LoginWindow : Window
                 MessageBox.Show("Invalid username or password.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        catch (Exception ex)    
+        catch (Exception ex)
         {
             MessageBox.Show($"Error during login: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
