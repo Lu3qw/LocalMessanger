@@ -1,14 +1,28 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using LocalMessangerClient;
 
 namespace LocalMessangerClient.ViewModels
 {
     public class UserViewModel : INotifyPropertyChanged
     {
-        public string Username { get; }
-
+        private string _username;
         private UserStatus _status;
+
+        public string Username
+        {
+            get => _username;
+            set
+            {
+                if (_username != value)
+                {
+                    _username = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DisplayName));
+                }
+            }
+        }
+
         public UserStatus Status
         {
             get => _status;
@@ -17,21 +31,25 @@ namespace LocalMessangerClient.ViewModels
                 if (_status != value)
                 {
                     _status = value;
-                    OnPropertyChanged();      
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DisplayName));
                 }
             }
         }
 
-        public UserViewModel(string username, UserStatus initialStatus = UserStatus.Offline)
+        private bool _isBlocked;
+        public bool IsBlocked
         {
-            Username = username;
-            _status = initialStatus;
+            get => _isBlocked;
+            set { _isBlocked = value; OnPropertyChanged(); }
         }
+        public string DisplayName => Username;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propName = null)
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

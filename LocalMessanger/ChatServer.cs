@@ -110,6 +110,7 @@ namespace LocalMessangerServer
             }
         }
 
+
         private async Task<string> ProcessRequestAsync(string request, TcpClient client)
         {
             try
@@ -138,6 +139,23 @@ namespace LocalMessangerServer
                             .ToArray();
                         return string.Join("|", msgs);
 
+                    case "get_statuses" when parts.Length == 1:
+                        var statuses = _clients.Values
+                            .Where(c => !string.IsNullOrEmpty(c.Username))
+                            .Select(c => $"{c.Username}:{c.Status}")
+                            .ToArray();
+                        return string.Join("|", statuses);
+
+                    case "get_blocks" when parts.Length == 2:
+                        var me = _db.Users.FirstOrDefault(u => u.Username == parts[1]);
+                        if (me == null) return "error:user_not_found";
+
+                        var list = _db.Blocks
+                            .Where(b => b.BlockerId == me.Id)
+                            .Select(b => b.Blocked.Username)
+                            .ToArray();
+                        return string.Join(",", list);
+
                     case string a when a == "register" && parts.Length >= 3:
                         return await _authService.RegisterAsync(parts[1], parts[2])
                             ? "success" : "error:username_taken";
@@ -153,40 +171,41 @@ namespace LocalMessangerServer
                                 ConnectedUsers.Remove(client.Client.RemoteEndPoint?.ToString());
                                 ConnectedUsers.Add(parts[1]);
                             });
+
                             return "success";
                         }
                         return "error:invalid_credentials";
 
-                    case string a when a == "block" && parts.Length >= 3:
+                    case "block" when parts.Length == 3:
                         var blocker = _db.Users.FirstOrDefault(u => u.Username == parts[1]);
-                        var toBlock = _db.Users.FirstOrDefault(u => u.Username == parts[2]);
-                        if (blocker == null || toBlock == null) return "error:user_not_found";
-                        if (!_db.Blocks.Any(b => b.BlockerId == blocker.Id && b.BlockedId == toBlock.Id))
+                        var blocked = _db.Users.FirstOrDefault(u => u.Username == parts[2]);
+                        if (blocker == null || blocked == null)
+                            return "error:user_not_found";
+
+                        var existing = _db.Blocks
+                            .FirstOrDefault(b => b.BlockerId == blocker.Id && b.BlockedId == blocked.Id);
+
+                        if (existing != null)
                         {
-                            _db.Blocks.Add(new Block { BlockerId = blocker.Id, BlockedId = toBlock.Id, CreatedAt = DateTime.UtcNow });
+                            _db.Blocks.Remove(existing);
                             await _db.SaveChangesAsync();
+                            return "unblocked";
                         }
-                        return "success";
+                        else
+                        {
+                            _db.Blocks.Add(new Block
+                            {
+                                BlockerId = blocker.Id,
+                                BlockedId = blocked.Id,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                            await _db.SaveChangesAsync();
+                            return "blocked";
+                        }
 
                     case string a when a == "status" && parts.Length >= 3:
-                        if (!Enum.TryParse<UserStatus>(parts[2], true, out var status))
-                            return "error:invalid_status";
-
-                        if (_clients.TryGetValue(client, out var info))
-                        {
-                            _clients[client] = (info.Username, status);
-                            App.Current.Dispatcher.Invoke(() =>
-                            {
-                                ConnectedUsers.Remove(info.Username);
-                                ConnectedUsers.Add(info.Username);
-                            });
-                        
-                            foreach (var writer in _userWriters.Values)
-                                await writer.WriteLineAsync($"notify_status:{info.Username}:{status}");
-                            await _logService.LogAsync($"User {info.Username} changed status to {status}", "Debug");
-                            return "success";
-                        }
-                        return "error:client_not_found";
+                        await HandleStatusChangeAsync(parts, client);
+                        return "success";
 
                     case string a when a == "message" && parts.Length >= 4:
                         var sender = parts[1];
@@ -197,7 +216,9 @@ namespace LocalMessangerServer
                         var snd = _db.Users.FirstOrDefault(u => u.Username == sender);
                         var rcv = _db.Users.FirstOrDefault(u => u.Username == receiver);
                         if (snd == null || rcv == null) return "error:user_not_found";
-                        if (_db.Blocks.Any(b => b.BlockerId == rcv.Id && b.BlockedId == snd.Id))
+                        bool blockedByReceiver = _db.Blocks.Any(b => b.BlockerId == rcv.Id && b.BlockedId == snd.Id);
+                        bool blockedBySender = _db.Blocks.Any(b => b.BlockerId == snd.Id && b.BlockedId == rcv.Id);
+                        if (blockedByReceiver || blockedBySender)
                             return "error:blocked";
 
                         _db.Messages.Add(new Message { SenderId = snd.Id, ReceiverId = rcv.Id, Text = content, SentAt = DateTime.UtcNow });
@@ -219,6 +240,27 @@ namespace LocalMessangerServer
                 _logService.Log($"Error processing request: {ex.Message}", "Error");
                 return "error:server_error";
             }
+        }
+        private async Task<string> HandleStatusChangeAsync(string[] parts, TcpClient client)
+        {
+            if (!Enum.TryParse<UserStatus>(parts[2], true, out var status))
+                return "error:invalid_status";
+
+            if (_clients.TryGetValue(client, out var info))
+            {
+                _clients[client] = (info.Username, status);
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    ConnectedUsers.Remove(info.Username);
+                    ConnectedUsers.Add(info.Username);
+                });
+
+                foreach (var writer in _userWriters.Values)
+                    await writer.WriteLineAsync($"notify_status:{info.Username}:{status}");
+                await _logService.LogAsync($"User {info.Username} changed status to {status}", "Debug");
+                return "success";
+            }
+            return "error:client_not_found";
         }
     }
 }

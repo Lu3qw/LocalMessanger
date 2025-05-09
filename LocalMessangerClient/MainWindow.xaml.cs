@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,7 +11,6 @@ using LocalMessangerClient.ViewModels;
 
 namespace LocalMessangerClient
 {
-
     public enum UserStatus { Online, Offline, DoNotDisturb, Away }
 
     public partial class MainWindow : Window
@@ -20,9 +18,12 @@ namespace LocalMessangerClient
         private ChatClient? _chatClient;
         private readonly string _username;
         public UserStatus SelectedUserStatus { get; set; }
-        public ObservableCollection<string> AllUsers { get; } = new ObservableCollection<string>();
+        public ObservableCollection<UserViewModel> AllUsers { get; } = new ObservableCollection<UserViewModel>();
         private CollectionViewSource FilteredUsersView { get; } = new CollectionViewSource();
         public ObservableCollection<MessageViewModel> Messages { get; } = new();
+
+        private UserViewModel? _selectedUserViewModel;
+
         public MainWindow(ChatClient chatClient, string username)
         {
             InitializeComponent();
@@ -37,17 +38,17 @@ namespace LocalMessangerClient
             {
                 if (string.IsNullOrWhiteSpace(UserSearchTextBox.Text))
                     e.Accepted = true;
+                else if (e.Item is UserViewModel user)
+                    e.Accepted = user.Username.IndexOf(UserSearchTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0;
                 else
-                    e.Accepted = ((string)e.Item).IndexOf(UserSearchTextBox.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+                    e.Accepted = false;
             };
+
             ChatListBox.ItemsSource = FilteredUsersView.View;
             ChatHistoryList.ItemsSource = Messages;
             SelectedUserStatus = UserStatus.Online;
 
-
             _ = LoadUserListAsync();
-
-
             DataContext = this;
         }
 
@@ -55,13 +56,37 @@ namespace LocalMessangerClient
         {
             var response = await _chatClient!.SendRequestAsync("list_users");
             var users = response.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 AllUsers.Clear();
                 foreach (var u in users.Where(u => u != _username))
-                    AllUsers.Add(u);
+                {
+                    AllUsers.Add(new UserViewModel
+                    {
+                        Username = u,
+                        Status = UserStatus.Offline
+                    });
+                }
             });
+
+            var blocksResp = await _chatClient.SendRequestAsync($"get_blocks:{_username}");
+            var blockedNames = blocksResp.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var uvm in AllUsers)
+                uvm.IsBlocked = blockedNames.Contains(uvm.Username, StringComparer.OrdinalIgnoreCase);
+
+            var statusResponse = await _chatClient.SendRequestAsync("get_statuses");
+            var pairs = statusResponse.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var pair in pairs)
+            {
+                var parts = pair.Split(':');
+                if (parts.Length == 2 && Enum.TryParse(parts[1], out UserStatus status))
+                {
+                    UpdateUserStatusInUI(parts[0], status);
+                }
+            }
         }
+
 
         private void OnMessageReceived(string message)
         {
@@ -104,15 +129,16 @@ namespace LocalMessangerClient
 
         private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ChatListBox.SelectedItem is not string selectedUser)
+            if (_selectedUserViewModel == null)
             {
                 MessageBox.Show("Select chat.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
             var content = MessageTextBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(content)) return;
 
-            await _chatClient!.SendMessageAsync(_username, selectedUser, content);
+            await _chatClient!.SendMessageAsync(_username, _selectedUserViewModel.Username, content);
 
             Messages.Add(new MessageViewModel
             {
@@ -122,6 +148,7 @@ namespace LocalMessangerClient
             });
             MessageTextBox.Clear();
         }
+
         private async Task LoadChatHistoryAsync(string partner)
         {
             Messages.Clear();
@@ -131,6 +158,8 @@ namespace LocalMessangerClient
 
             for (int i = 0; i < entries.Length; i += 2)
             {
+                if (i + 1 >= entries.Length) break;
+
                 var head = entries[i];       // "sender:content"
                 var tsText = entries[i + 1]; // timestamp
 
@@ -153,26 +182,14 @@ namespace LocalMessangerClient
             }
         }
 
-        private void UpdateUserStatusInUI(string user, UserStatus status)
+        private void UpdateUserStatusInUI(string username, UserStatus status)
         {
-            var item = ChatListBox.Items.Cast<string>().FirstOrDefault(u => u == user);
-            if (item != null)
+            var userVM = AllUsers.FirstOrDefault(u => u.Username == username);
+            if (userVM != null)
             {
-                var container = (ListBoxItem)ChatListBox.ItemContainerGenerator.ContainerFromItem(item);
-                if (container != null)
-                {
-                    container.Background = status switch
-                    {
-                        UserStatus.Online => Brushes.LightGreen,
-                        UserStatus.Offline => Brushes.LightGray,
-                        UserStatus.DoNotDisturb => Brushes.IndianRed,
-                        UserStatus.Away => Brushes.Khaki,
-                        _ => Brushes.White
-                    };
-                }
+                userVM.Status = status;
             }
         }
-
 
         private void UserSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -181,9 +198,13 @@ namespace LocalMessangerClient
 
         private async void ChatListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ChatListBox.SelectedItem is string partner)
-                await LoadChatHistoryAsync(partner);
+            if (ChatListBox.SelectedItem is UserViewModel selectedUser)
+            {
+                _selectedUserViewModel = selectedUser;
+                await LoadChatHistoryAsync(selectedUser.Username);
+            }
         }
+
         private void EmojiToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             EmojiPopup.IsOpen = true;
@@ -213,12 +234,25 @@ namespace LocalMessangerClient
 
         private async void BlockButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ChatListBox.SelectedItem is not string toBlock) return;
-            var result = await _chatClient.BlockUserAsync(_username, toBlock);
-            if (result == "success")
-                MessageBox.Show($"You blocked {toBlock}");
+            if (_selectedUserViewModel == null) return;
+
+            var target = _selectedUserViewModel.Username;
+            var result = await _chatClient.SendRequestAsync($"block:{_username}:{target}");
+
+            if (result == "blocked")
+            {
+                _selectedUserViewModel.IsBlocked = true;
+                MessageBox.Show($"You blocked {target}");
+            }
+            else if (result == "unblocked")
+            {
+                _selectedUserViewModel.IsBlocked = false;
+                MessageBox.Show($"You unblocked {target}");
+            }
             else
-                MessageBox.Show($"Block failed: {result}");
+            {
+                MessageBox.Show($"Error: {result}");
+            }
         }
 
         private async void StatusComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -230,19 +264,15 @@ namespace LocalMessangerClient
             }
         }
 
-
         private void Window_Closed(object sender, EventArgs e)
         {
+            _chatClient.ChangeStatusAsync(_username, UserStatus.Offline.ToString());
             _chatClient?.Disconnect();
         }
 
-        private void ChatListUpdateButton_Click(object sender, RoutedEventArgs e)
+        private async void ChatListUpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            //if (_chatClient == null) return;
-            //if (sender is Button btn)
-            //{
-            //    LoadUserListAsync();
-            //}
+            await LoadUserListAsync();
         }
     }
 }
