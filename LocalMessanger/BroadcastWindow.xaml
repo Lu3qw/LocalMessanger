@@ -1,7 +1,7 @@
 ﻿<Window x:Class="LocalMessanger.BroadcastWindow"  
        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"  
        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"  
-       Title="Broadcast Message" Height="150" Width="300" WindowStartupLocation="CenterOwner">  
+       Title="Broadcast Message" Height="170" Width="300" WindowStartupLocation="CenterOwner">  
    <StackPanel Margin="10">  
        <TextBlock Text="Enter message for all users:" Margin="0,0,0,5"/>  
        <TextBox x:Name="txtMessage" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>  

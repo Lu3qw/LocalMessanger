@@ -1,18 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
-namespace LocalMessangerServer
+namespace LocalMessanger
 {
     /// <summary>
     /// Interaction logic for BroadcastWindow.xaml
@@ -20,7 +8,12 @@ namespace LocalMessangerServer
     public partial class BroadcastWindow : Window
     {
         public string MessageText => txtMessage.Text;
-        public BroadcastWindow() => InitializeComponent();
+
+        public BroadcastWindow()
+        {
+            InitializeComponent();
+            txtMessage.Focus();
+        }
 
         private void Send_Click(object sender, RoutedEventArgs e)
         {
@@ -33,5 +26,4 @@ namespace LocalMessangerServer
             DialogResult = false;
         }
     }
-
 }

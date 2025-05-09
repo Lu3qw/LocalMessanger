@@ -4,6 +4,19 @@
              xmlns:local="clr-namespace:LocalMessangerClient"
              StartupUri="LoginWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/ThemeDictionary.xaml"/>
+                <ResourceDictionary Source="Themes/LightTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <local:BoolToBrushConverter x:Key="BoolToBrushConverter" 
+                                        TrueBrush="{StaticResource MyMessageBubbleBrush}" 
+                                        FalseBrush="{StaticResource OtherMessageBubbleBrush}"/>
+            <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
+            <local:StatusToBrushConverter x:Key="StatusToBrush"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

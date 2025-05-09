@@ -7,12 +7,9 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="Local Messenger Client" Height="600" Width="1000" WindowStartupLocation="CenterScreen" WindowStyle="SingleBorderWindow"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        Background="{StaticResource BackgroundBrush}">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <local:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="LightGreen" FalseBrush="White"/>
-        <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
-        <local:StatusToBrushConverter x:Key="StatusToBrush"/>
         <ObjectDataProvider MethodName="GetValues"
                       ObjectType="{x:Type sys:Enum}"
                       x:Key="StatusValues">
@@ -22,7 +19,7 @@
         </ObjectDataProvider>
     </Window.Resources>
 
-    <Grid Background="GhostWhite">
+    <Grid Background="{StaticResource BackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="60"/>
             <RowDefinition Height="*"/>
@@ -34,180 +31,70 @@
         </Grid.ColumnDefinitions>
 
         <!-- Header -->
-        <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="CornflowerBlue" Margin="3,-8,3,0">
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource PrimaryBrush}" Margin="3,-8,3,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Local Messenger" FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Top" Margin="8"/>
-                <Button Content="Change Theme" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
-                <Button Content="Change Language" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"/>
-                <Button Content="Block/Unblock" Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold" Click="BlockButton_Click"/>
-                <ComboBox Width="120" Height="30" Margin="10" Background="White" Foreground="Black" FontWeight="Bold"
-                            ItemsSource="{Binding Source={StaticResource StatusValues}}"
-                            SelectedItem="{Binding Path=SelectedUserStatus, Mode=TwoWay}"
-                            SelectionChanged="StatusComboBox_SelectionChanged"/>
+                <TextBlock Text="Local Messenger" Style="{StaticResource HeaderStyle}" VerticalAlignment="Top" Margin="8"/>
+                <Button Content="Change Theme" Width="120" Height="30" 
+                        Margin="10" Style="{StaticResource DefaultButtonStyle}" Click="ChangeThemeButton_Click"/>
+                <Button Content="Change Language" Width="120" Height="30" 
+                        Margin="10" Style="{StaticResource DefaultButtonStyle}"/>
+                <Button Content="Block/Unblock" Width="120" Height="30" 
+                        Margin="10" Style="{StaticResource DefaultButtonStyle}" Click="BlockButton_Click"/>
+                <ComboBox Width="120" Height="30" Margin="10" 
+                          Background="{StaticResource ControlBackgroundBrush}" 
+                          Foreground="{StaticResource TextBrush}"
+                          BorderBrush="{StaticResource BorderBrush}"
+                          ItemsSource="{Binding Source={StaticResource StatusValues}}"
+                          SelectedItem="{Binding Path=SelectedUserStatus, Mode=TwoWay}"
+                          SelectionChanged="StatusComboBox_SelectionChanged"/>
 
-                <TextBlock x:Name="UsernameDisplayTextBlock" Text="Username: [YourUsername]" FontSize="16" FontWeight="Normal" Foreground="White" VerticalAlignment="Top" Margin="30,10,10,10"/>
+                <TextBlock x:Name="UsernameDisplayTextBlock" 
+                           Text="Username: [YourUsername]" 
+                           FontSize="{StaticResource LargeFontSize}" 
+                           Foreground="{StaticResource InvertedTextBrush}" 
+                           VerticalAlignment="Top" Margin="30,10,10,10"/>
             </StackPanel>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,15,3">
                 <StackPanel Orientation="Horizontal" Margin="5,0">
-                    <Border Width="8" Height="8" CornerRadius="4" Background="Green" Margin="0,0,3,0"/>
-                    <TextBlock Text="Online" Foreground="White" FontSize="11"/>
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource OnlineStatusBrush}" Margin="0,0,3,0"/>
+                    <TextBlock Text="Online" Foreground="{StaticResource InvertedTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="5,0">
-                    <Border Width="8" Height="8" CornerRadius="4" Background="Yellow" Margin="0,0,3,0"/>
-                    <TextBlock Text="Away" Foreground="White" FontSize="11"/>
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource AwayStatusBrush}" Margin="0,0,3,0"/>
+                    <TextBlock Text="Away" Foreground="{StaticResource InvertedTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="5,0">
-                    <Border Width="8" Height="8" CornerRadius="4" Background="Red" Margin="0,0,3,0"/>
-                    <TextBlock Text="Do Not Disturb" Foreground="White" FontSize="11"/>
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource DoNotDisturbStatusBrush}" Margin="0,0,3,0"/>
+                    <TextBlock Text="Do Not Disturb" Foreground="{StaticResource InvertedTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="5,0">
-                    <Border Width="8" Height="8" CornerRadius="4" Background="Gray" Margin="0,0,3,0"/>
-                    <TextBlock Text="Offline" Foreground="White" FontSize="11"/>
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource OfflineStatusBrush}" Margin="0,0,3,0"/>
+                    <TextBlock Text="Offline" Foreground="{StaticResource InvertedTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
 
         <!-- Chat List -->
-        <StackPanel Grid.Row="1" Grid.Column="0" Margin="10">
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="{StaticResource NormalMargin}">
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="UserSearchTextBox"
                          Width="200" Height="30"
                          Margin="0,0,0,5"
+                         Style="{StaticResource TextBoxStyle}"
                          TextChanged="UserSearchTextBox_TextChanged"
                          HorizontalAlignment="Left"/>
-                <Button x:Name="ChatListUpdateButton" Content="Update" Width="60" Height="30" Margin="15,0,0,5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" Click="ChatListUpdateButton_Click"/>
+                <Button x:Name="ChatListUpdateButton" Content="Update" 
+                        Width="60" Height="30" Margin="15,0,0,5" 
+                        Style="{StaticResource DefaultButtonStyle}" 
+                        Click="ChatListUpdateButton_Click"/>
             </StackPanel>
 
             <ListBox x:Name="ChatListBox"
              Height="470"
-             Background="WhiteSmoke"
-             BorderBrush="Gray" BorderThickness="1"
-             SelectionChanged="ChatListBox_SelectionChanged">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="18"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="18"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Border Grid.Column="0" Width="10" Height="10" CornerRadius="5" Margin="3" VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="Gray"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Status}" Value="Online">
-                                                <Setter Property="Background" Value="Green"/>
-                                                <Setter Property="ToolTip" Value="Online"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Status}" Value="Away">
-                                                <Setter Property="Background" Value="Yellow"/>
-                                                <Setter Property="ToolTip" Value="Away"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Status}" Value="DoNotDisturb">
-                                                <Setter Property="Background" Value="Red"/>
-                                                <Setter Property="ToolTip" Value="Do Not Disturb"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Status}" Value="Offline">
-                                                <Setter Property="Background" Value="Gray"/>
-                                                <Setter Property="ToolTip" Value="Offline"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                            </Border>
-
-                            <TextBlock Grid.Column="1" Text="{Binding Username}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="🔒" Margin="4,0,0,0"
-                                       Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </StackPanel>
-
-        <!-- Chat Content -->
-        <Grid Grid.Row="1" Grid.Column="1" Margin="10" Background="WhiteSmoke">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="50"/>
-            </Grid.RowDefinitions>
-
-            <!-- Chat History -->
-            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="6">
-                <ScrollViewer>
-                    <ItemsControl x:Name="ChatHistoryList" ItemsSource="{Binding Messages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="12" Padding="8" Margin="5"
-                                        Background="{Binding IsMe, Converter={StaticResource BoolToBrushConverter}}"
-                                        HorizontalAlignment="{Binding IsMe, Converter={StaticResource BoolToAlignmentConverter}}"
-                                        MaxWidth="300">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Time}" FontSize="10" 
-                                         HorizontalAlignment="Right" Opacity="0.6" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Border>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10">
-                <TextBox x:Name="MessageTextBox"
-                         Width="400" Height="30"
-                         Margin="0"
-                         Background="White"
-                         BorderBrush="Gray"
-                         BorderThickness="1"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Bottom"
-                         TextAlignment="Justify"/>
-                <Button Content="Send" Width="100" Height="50" Margin="5" Background="CornflowerBlue" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Click="SendMessageButton_Click"/>
-                <ToggleButton x:Name="EmojiToggleButton"
-                  Content="😊"
-                  Width="40" Height="30"
-                  Background="CornflowerBlue" 
-                  Foreground="White" 
-                  FontWeight="Bold" 
-                  HorizontalAlignment="Center"
-                  Margin="5"
-                  VerticalAlignment="Center"
-                  Checked="EmojiToggleButton_Checked"
-                  Unchecked="EmojiToggleButton_Unchecked"/>
-                <Popup x:Name="EmojiPopup"
-                   PlacementTarget="{Binding ElementName=EmojiToggleButton}"
-                   Placement="Top"
-                   StaysOpen="False"
-                   AllowsTransparency="True"
-                   PopupAnimation="Fade"
-                   Closed="EmojiPopup_Closed">
-                    <Border Background="WhiteSmoke" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
-                        <ScrollViewer Height="150" Width="200">
-                            <UniformGrid Columns="6" Margin="5">
-                                <Button Content="😀" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="😂" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="😍" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="😢" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="👍" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="🙏" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="🎉" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="😎" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="🔥" Click="EmojiButton_Click" Margin="2"/>
-                                <Button Content="💡" Click="EmojiButton_Click" Margin="2"/>
-                            </UniformGrid>
-                        </ScrollViewer>
-                    </Border>
-                </Popup>
-            </StackPanel>
-        </Grid>
-    </Grid>
-</Window>
+             Style="{StaticResource ListBoxStyle

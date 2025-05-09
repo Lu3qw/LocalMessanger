@@ -101,6 +101,14 @@ namespace LocalMessangerClient
                     UpdateUserStatusInUI(who, st);
                     return;
                 }
+                if (message.StartsWith("broadcast:"))
+                {
+                    var parts = message.Split(':');
+                    var _sender = parts[1];
+                    var _content = parts[2];
+
+                    MessageBox.Show($"Broadcast from {_sender}: {_content}", "Broadcast", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
                 if (!message.StartsWith("message:")) return;
                 var body = message.Substring("message:".Length);
                 var pipe = body.LastIndexOf('|');
