@@ -54,5 +54,53 @@ namespace LocalMessangerServer
             await _logService.LogAsync($"User '{username}' logged in.", "Info");
             return true;
         }
+
+
+        public void BanUser(string username)
+        {
+            using (var db = new AppDbContext())
+            {
+                if (db.BannedUsers.Any(b => b.Username == username)) return;
+                db.BannedUsers.Add(new BannedUser
+                {
+                    Username = username,
+                    BanDate = DateTime.Now
+                });
+                db.SaveChanges();
+            }
+        }
+
+        public void UnbanUser(string username)
+        {
+            using (var db = new AppDbContext())
+            {
+                var ban = db.BannedUsers.FirstOrDefault(b => b.Username == username);
+                if (ban != null)
+                {
+                    db.BannedUsers.Remove(ban);
+                    db.SaveChanges();
+                }
+            }
+        }
+
+        public bool IsUserBanned(string username)
+        {
+            using (var db = new AppDbContext())
+            {
+                var ban = db.BannedUsers.FirstOrDefault(b => b.Username == username);
+                if (ban == null) return false;
+
+                if (ban.BanDate.AddMonths(1) < DateTime.Now)
+                {
+                    db.BannedUsers.Remove(ban);
+                    var user = db.Users.FirstOrDefault(u => u.Username == username);
+                    if (user != null) db.Users.Remove(user);
+                    db.SaveChanges();
+                    return false;
+                }
+                return true;
+            }
+        }
+
     }
 }

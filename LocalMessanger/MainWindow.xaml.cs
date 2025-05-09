@@ -75,4 +75,35 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             chatServer.Stop();
         }
     }
+
+    private void BroadcastButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new BroadcastWindow { Owner = this };
+        if (dlg.ShowDialog() == true)
+        {
+            var msg = dlg.MessageText;
+
+            chatServer.BroadcastToAll(msg);
+            MessageBox.Show("Message sent to all users.", "Broadcast");
+        }
+    }
+
+    private void BanButton_Click(object sender, RoutedEventArgs e)
+    {
+        var username;
+        AuthService.BanUser(username);
+        MessageBox.Show($"{username} has been banned.", "Ban");
+    }
+
+    private void UnbanButton_Click(object sender, RoutedEventArgs e)
+    {
+        var username;
+        AuthService.UnbanUser(username);
+        MessageBox.Show($"{username} has been unbanned.", "Unban");
+    }
+
+    private void OpenDatabaseButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
 }

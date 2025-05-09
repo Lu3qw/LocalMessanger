@@ -16,6 +16,8 @@ namespace LocalMessangerServer.EF
         public DbSet<UserLog> UserLogs { get; set; }
         public DbSet<ServerLog> ServerLogs { get; set; }
 
+        public DbSet<BannedUser> BannedUsers { get; set; }
+
         public AppDbContext() { }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)

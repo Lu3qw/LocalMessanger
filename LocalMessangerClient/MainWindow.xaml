@@ -13,7 +13,6 @@
         <local:BoolToBrushConverter x:Key="BoolToBrushConverter" TrueBrush="LightGreen" FalseBrush="White"/>
         <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
         <local:StatusToBrushConverter x:Key="StatusToBrush"/>
-        <local:StatusToEmojiConverter x:Key="StatusToEmoji"/>
         <ObjectDataProvider MethodName="GetValues"
                       ObjectType="{x:Type sys:Enum}"
                       x:Key="StatusValues">
