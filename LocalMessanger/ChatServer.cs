@@ -110,7 +110,6 @@ namespace LocalMessangerServer
             }
         }
 
-
         private async Task<string> ProcessRequestAsync(string request, TcpClient client)
         {
             try
@@ -157,13 +156,19 @@ namespace LocalMessangerServer
                         return string.Join(",", list);
 
                     case string a when a == "register" && parts.Length >= 3:
+                        if (_authService.IsUserBanned(parts[1]))
+                            return "error:user_banned";
+
                         return await _authService.RegisterAsync(parts[1], parts[2])
                             ? "success" : "error:username_taken";
 
                     case string a when a == "login" && parts.Length >= 3:
+                        if (_authService.IsUserBanned(parts[1]))
+                            return "error:user_banned";
+
                         if (await _authService.LoginAsync(parts[1], parts[2]))
                         {
-                            
+
                             _clients[client] = (parts[1], UserStatus.Online);
                             _userWriters[parts[1]] = _clientWriters[client];
                             App.Current.Dispatcher.Invoke(() =>
@@ -241,6 +246,7 @@ namespace LocalMessangerServer
                 return "error:server_error";
             }
         }
+
         private async Task<string> HandleStatusChangeAsync(string[] parts, TcpClient client)
         {
             if (!Enum.TryParse<UserStatus>(parts[2], true, out var status))
@@ -261,6 +267,45 @@ namespace LocalMessangerServer
                 return "success";
             }
             return "error:client_not_found";
+        }
+
+        public void BroadcastToAll(string message)
+        {
+            foreach (var userWriter in _userWriters)
+            {
+                try
+                {
+                    userWriter.Value.WriteLineAsync($"broadcast:SERVER:{message}");
+                }
+                catch (Exception ex)
+                {
+                    _logService.Log($"Error sending broadcast to {userWriter.Key}: {ex.Message}", "Error");
+                }
+            }
+            _logService.Log($"Broadcast message sent: {message}", "Info");
+        }
+
+        public ConcurrentDictionary<string, StreamWriter> GetAllUserWriters()
+        {
+            return _userWriters;
+        }
+
+
+        public void DisconnectUser(string username)
+        {
+            var clientToDisconnect = _clients.FirstOrDefault(c => c.Value.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            if (!clientToDisconnect.Equals(default(KeyValuePair<TcpClient, (string, UserStatus)>)))
+            {
+                try
+                {
+                    clientToDisconnect.Key.Close();
+                    _logService.Log($"User {username} was forcibly disconnected", "Warning");
+                }
+                catch (Exception ex)
+                {
+                    _logService.Log($"Error disconnecting user {username}: {ex.Message}", "Error");
+                }
+            }
         }
     }
 }

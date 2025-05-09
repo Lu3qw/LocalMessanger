@@ -5,8 +5,119 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalMessangerServer"
         mc:Ignorable="d"
-        Title="DatabaseWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="Database Management" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TabControl Grid.Row="1">
+            <TabItem Header="Users">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button x:Name="RefreshUsersButton" Content="Refresh" Width="80" 
+                                Margin="0,0,10,0" Click="RefreshUsersButton_Click"/>
+                        <Button x:Name="DeleteUserButton" Content="Delete" Width="80" 
+                                Margin="0,0,10,0" Click="DeleteUserButton_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="UsersDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                              IsReadOnly="True" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
+                            <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAt}" Width="150"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Messages">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button x:Name="RefreshMessagesButton" Content="Refresh" Width="80" 
+                                Margin="0,0,10,0" Click="RefreshMessagesButton_Click"/>
+                        <Button x:Name="DeleteMessageButton" Content="Delete" Width="80" 
+                                Margin="0,0,10,0" Click="DeleteMessageButton_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="MessagesDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                              IsReadOnly="True" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Sender" Binding="{Binding SenderName}" Width="100"/>
+                            <DataGridTextColumn Header="Receiver" Binding="{Binding ReceiverName}" Width="100"/>
+                            <DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="*"/>
+                            <DataGridTextColumn Header="Sent At" Binding="{Binding SentAt}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Banned Users">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button x:Name="RefreshBannedButton" Content="Refresh" Width="80" 
+                                Margin="0,0,10,0" Click="RefreshBannedButton_Click"/>
+                        <Button x:Name="UnbanUserButton" Content="Unban" Width="80" 
+                                Margin="0,0,10,0" Click="UnbanUserButton_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="BannedUsersDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                              IsReadOnly="True" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
+                            <DataGridTextColumn Header="Ban Date" Binding="{Binding BanDate}" Width="150"/>
+                            <DataGridTextColumn Header="Expires" Binding="{Binding ExpiryDate}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Server Logs">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Button x:Name="RefreshLogsButton" Content="Refresh" Width="80" 
+                                Margin="0,0,10,0" Click="RefreshLogsButton_Click"/>
+                        <Button x:Name="ClearLogsButton" Content="Clear Logs" Width="80" 
+                                Margin="0,0,10,0" Click="ClearLogsButton_Click"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="LogsDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                              IsReadOnly="True" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*"/>
+                            <DataGridTextColumn Header="Level" Binding="{Binding LogLevel}" Width="80"/>
+                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
