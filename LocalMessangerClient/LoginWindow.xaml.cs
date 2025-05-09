@@ -1,15 +1,69 @@
 ﻿using System.Windows;
 using BCrypt.Net;
+using Microsoft.Win32;
 namespace LocalMessangerClient;
 
 public partial class LoginWindow : Window
 {
+    private const string RegistryKeyPath = @"Software\LocalMessanger";
+    private const string RegistryValueName = "SelectedTheme";
+
+
+
     private ChatClient? _chatClient;
 
     public LoginWindow()
     {
         InitializeComponent();
+        LoadThemeFromRegistry();
     }
+
+    private void LoadThemeFromRegistry()
+    {
+        try
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath);
+            if (key != null)
+            {
+                object theme = key.GetValue(RegistryValueName);
+                if (theme != null)
+                {
+                    ApplyTheme(theme.ToString());
+                }
+                key.Close();
+            }
+            else
+            {
+                ApplyTheme("Light");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error loading theme: {ex.Message}");
+        }
+    }
+
+    private void ApplyTheme(string themeName)
+    {
+
+        var dictionaries = Application.Current.Resources.MergedDictionaries;
+        dictionaries.Clear();
+
+        var themeDict = new ResourceDictionary();
+        switch (themeName)
+        {
+            case "Dark":
+                themeDict.Source = new Uri("Themes/DarkTheme.xaml", UriKind.Relative);
+                break;
+            default:
+                themeDict.Source = new Uri("Themes/LightTheme.xaml", UriKind.Relative);
+                break;
+        }
+        dictionaries.Add(themeDict);
+    }
+
+
+
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
