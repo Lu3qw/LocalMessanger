@@ -87,7 +87,6 @@ namespace LocalMessangerClient
             }
         }
 
-
         private void OnMessageReceived(string message)
         {
             Dispatcher.Invoke(() =>
@@ -281,6 +280,12 @@ namespace LocalMessangerClient
         private async void ChatListUpdateButton_Click(object sender, RoutedEventArgs e)
         {
             await LoadUserListAsync();
+        }
+
+        private void ThemeButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            ThemeManager.ToggleTheme();
         }
     }
 }

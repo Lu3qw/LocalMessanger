@@ -1,7 +1,4 @@
-﻿
-using System;
-using System.Globalization;
-using System.Windows;
+﻿using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
@@ -13,9 +10,17 @@ namespace LocalMessangerClient
         public Brush FalseBrush { get; set; }
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-            => (value is bool b && b) ? TrueBrush : FalseBrush;
+        {
+            if (value is bool boolValue)
+            {
+                return boolValue ? TrueBrush : FalseBrush;
+            }
+            return FalseBrush;
+        }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+        {
+            throw new NotImplementedException();
+        }
     }
 }
