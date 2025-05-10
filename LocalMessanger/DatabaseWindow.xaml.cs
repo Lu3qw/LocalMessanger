@@ -64,13 +64,23 @@ namespace LocalMessangerServer
             {
                 try
                 {
-                    var user = _db.Users.Find(selectedUser.Id);
+                    var user = _db.Users.Find((int)selectedUser.Id); // Explicitly cast to int
                     if (user != null)
                     {
+                        // Delete all messages sent or received by the user
+                        var messagesToDelete = _db.Messages
+                            .Where(m => m.SenderId == user.Id || m.ReceiverId == user.Id)
+                            .ToList();
+
+                        _db.Messages.RemoveRange(messagesToDelete);
+
+                        // Delete the user
                         _db.Users.Remove(user);
                         _db.SaveChanges();
-                        _logService.Log($"User '{selectedUser.Username}' was deleted", "Warning");
+
+                        _logService.Log($"User '{selectedUser.Username}' and all their messages were deleted", "Warning");
                         RefreshUsersData();
+                        RefreshMessagesData();
                     }
                 }
                 catch (Exception ex)
@@ -208,7 +218,6 @@ namespace LocalMessangerServer
             {
                 try
                 {
-                    // Keep the most recent 10 logs for audit purposes
                     var logsToKeep = _db.ServerLogs
                         .OrderByDescending(l => l.Timestamp)
                         .Take(10)

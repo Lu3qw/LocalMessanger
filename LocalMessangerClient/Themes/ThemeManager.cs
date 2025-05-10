@@ -24,26 +24,30 @@ namespace LocalMessangerClient
 
         public static void ChangeTheme(ThemeType theme)
         {
+
+            if (Application.Current == null)
+                return;
+
             var appDictionaries = Application.Current.Resources.MergedDictionaries;
 
-            // Знаходимо усі словники тем
-            ResourceDictionary themeDictionary = appDictionaries.FirstOrDefault(d =>
+
+            ResourceDictionary? themeDictionary = appDictionaries.FirstOrDefault(d =>
                 d.Source != null &&
                 (d.Source.OriginalString.EndsWith("LightTheme.xaml") ||
                  d.Source.OriginalString.EndsWith("DarkTheme.xaml")));
 
-            ResourceDictionary baseThemeDictionary = appDictionaries.FirstOrDefault(d =>
+            ResourceDictionary? baseThemeDictionary = appDictionaries.FirstOrDefault(d =>
                 d.Source != null &&
                 d.Source.OriginalString.EndsWith("ThemeDictionary.xaml"));
 
-            // Якщо базовий словник теми не знайдено, додаємо його
+
             if (baseThemeDictionary == null)
             {
                 baseThemeDictionary = new ResourceDictionary { Source = ThemeDictionaryUri };
                 appDictionaries.Add(baseThemeDictionary);
             }
 
-            // Замінюємо словник конкретної теми або додаємо новий
+
             if (themeDictionary != null)
                 appDictionaries.Remove(themeDictionary);
 
@@ -61,7 +65,7 @@ namespace LocalMessangerClient
 
             appDictionaries.Add(newThemeDictionary);
 
-            // Зберігаємо вибір теми у реєстрі
+   
             SaveThemeToRegistry(theme.ToString());
         }
 
@@ -75,7 +79,8 @@ namespace LocalMessangerClient
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving theme to registry: {ex.Message}");
+                MessageBox.Show($"Помилка збереження теми в реєстрі: {ex.Message}", "Помилка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

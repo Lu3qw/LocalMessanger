@@ -44,11 +44,11 @@
                         Margin="{StaticResource NormalMargin}" 
                         Style="{StaticResource DefaultButtonStyle}"
                         Click="ThemeButton_Click"/>
-                <Button Content="Change Language" 
+                <!--<Button Content="Change Language" 
                         Width="{StaticResource StandardButtonWidth}" 
                         Height="{StaticResource StandardButtonHeight}" 
                         Margin="{StaticResource NormalMargin}" 
-                        Style="{StaticResource DefaultButtonStyle}"/>
+                        Style="{StaticResource DefaultButtonStyle}"/>-->
                 <Button Content="Block/Unblock" 
                         Width="{StaticResource StandardButtonWidth}" 
                         Height="{StaticResource StandardButtonHeight}" 
@@ -59,7 +59,7 @@
                           Height="{StaticResource StandardButtonHeight}" 
                           Margin="{StaticResource NormalMargin}" 
                           Background="{StaticResource ControlBackgroundBrush}" 
-                          Foreground="{StaticResource TextBrush}" 
+                          Foreground="{StaticResource DoNotDisturbStatusBrush}" 
                           FontWeight="{StaticResource BoldFontWeight}"
                           ItemsSource="{Binding Source={StaticResource StatusValues}}"
                           SelectedItem="{Binding Path=SelectedUserStatus, Mode=TwoWay}"
@@ -70,7 +70,7 @@
                            FontSize="{StaticResource LargeFontSize}" 
                            Foreground="{StaticResource InvertedTextBrush}" 
                            VerticalAlignment="Top" 
-                           Margin="30,10,10,10"/>
+                           Margin="275,10,10,10"/>
             </StackPanel>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,15,3">

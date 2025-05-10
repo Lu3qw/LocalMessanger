@@ -284,8 +284,11 @@ namespace LocalMessangerClient
 
         private void ThemeButton_Click(object sender, RoutedEventArgs e)
         {
-
             ThemeManager.ToggleTheme();
+
+            string themeName = ThemeManager.CurrentTheme == ThemeType.Dark ? "dark" : "light";
+            MessageBox.Show($"Changed to {themeName} theme, restart your application.", "Theme Change",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
