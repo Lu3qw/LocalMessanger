@@ -24,8 +24,23 @@
 
         <Label x:Name="ConnectedUserLabel" Content="Connected users:" HorizontalAlignment="Left" VerticalAlignment="Bottom"  />
         <Label x:Name="ServerLogLabel" Content="Server Log:" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="1" />
-        
-        
+
+        <Button x:Name="ChangeThemeButton" 
+        Grid.Row="0" 
+        Grid.Column="1" 
+        Margin="10" 
+        Width="60" 
+        Height="30" 
+        Content="Theme" 
+        Background="CornflowerBlue" 
+        Foreground="White" 
+        BorderThickness="2"
+        BorderBrush="Gray"
+        FontWeight="Bold" 
+        HorizontalAlignment="Right" 
+        VerticalAlignment="Center" 
+        Click="ChangeThemeButton_Click"/>
+
         <ListBox x:Name="ConnectedUserListBox" 
                     Grid.Row="1" 
                     Grid.Column="0" 

@@ -186,4 +186,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _db.Dispose();
         base.OnClosing(e);
     }
+
+    private void ChangeThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
 }
