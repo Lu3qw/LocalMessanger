@@ -1,4 +1,5 @@
-﻿using LocalMessangerServer;
+﻿using LocalMessangerClient;
+using LocalMessangerServer;
 using LocalMessangerServer.EF;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -21,7 +22,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private string _serverLog = string.Empty;
     public string ServerLog
-    {
+    {   
         get => _serverLog;
         set
         {
@@ -55,8 +56,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         this.DataContext = this;
 
-        // Disable buttons until server is started
         SetButtonsEnabled(false);
+
+        UpdateThemeButtonText();
+
+
     }
 
     private void SetButtonsEnabled(bool enabled)
@@ -138,7 +142,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             if (!string.IsNullOrEmpty(username))
             {
                 _authService.BanUser(username);
-                // Disconnect the user if they're connected
                 _chatServer.DisconnectUser(username);
                 MessageBox.Show($"{username} has been banned.", "Ban");
                 _logService.Log($"User '{username}' has been banned", "Warning");
@@ -187,8 +190,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         base.OnClosing(e);
     }
 
+    private void UpdateThemeButtonText()
+    {
+        ChangeThemeButton.Content = ThemeManager.CurrentTheme == ThemeType.Light ? "Dark 🌙" : "Light ☀️";
+    }
+
     private void ChangeThemeButton_Click(object sender, RoutedEventArgs e)
     {
-
+        ThemeManager.ToggleTheme();
+        UpdateThemeButtonText();
+        _logService?.Log($"Theme changed to {ThemeManager.CurrentTheme}", "Info");
     }
 }

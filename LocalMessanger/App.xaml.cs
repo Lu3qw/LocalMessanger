@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LocalMessangerClient;
+using Microsoft.Win32;
+using System;
 using System.Windows;
 
 namespace LocalMessangerServer
@@ -23,13 +25,49 @@ namespace LocalMessangerServer
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+
+            // Load theme from registry
+            LoadThemeFromRegistry();
+        }
+
+        private void LoadThemeFromRegistry()
+        {
+            try
+            {
+                const string registryKeyPath = @"Software\LocalMessanger";
+                const string registryValueName = "SelectedTheme";
+
+                RegistryKey? key = Registry.CurrentUser.OpenSubKey(registryKeyPath);
+                if (key != null)
+                {
+                    string? themeName = key.GetValue(registryValueName) as string;
+                    key.Close();
+
+                    if (!string.IsNullOrEmpty(themeName) && Enum.TryParse<ThemeType>(themeName, out ThemeType theme))
+                    {
+                        ThemeManager.ChangeTheme(theme);
+                    }
+                    else
+                    {
+
+                        ThemeManager.ChangeTheme(ThemeType.Light);
+                    }
+                }
+                else
+                {
+                    ThemeManager.ChangeTheme(ThemeType.Light);
+                }
+            }
+            catch (Exception)
+            {
+                ThemeManager.ChangeTheme(ThemeType.Light);
+            }
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // Start the main window
             var mainWindow = new LocalMessanger.MainWindow();
             mainWindow.Show();
         }

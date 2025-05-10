@@ -3,13 +3,13 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
        xmlns:local="clr-namespace:LocalMessanger"
-       mc:Ignorable="d"
-       Title="Server" Height="550" Width="1000" WindowStartupLocation="CenterScreen" WindowStyle="SingleBorderWindow">
+       mc:Ignorable="d" 
+       Title="Server" Height="550" Width="1000" WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        >
 
-
-
-    <Grid x:Name="MainGrid" Margin="10" Background="GhostWhite">
+    <Grid x:Name="MainGrid" Background="{DynamicResource BackgroundBrush}">
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
@@ -22,8 +22,8 @@
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
 
-        <Label x:Name="ConnectedUserLabel" Content="Connected users:" HorizontalAlignment="Left" VerticalAlignment="Bottom"  />
-        <Label x:Name="ServerLogLabel" Content="Server Log:" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="1" />
+        <Label x:Name="ConnectedUserLabel" Content="Connected users:" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="{DynamicResource TextBrush}" />
+        <Label x:Name="ServerLogLabel" Content="Server Log:" HorizontalAlignment="Left" VerticalAlignment="Bottom" Grid.Row="0" Grid.Column="1" Foreground="{DynamicResource TextBrush}" />
 
         <Button x:Name="ChangeThemeButton" 
         Grid.Row="0" 
@@ -32,11 +32,12 @@
         Width="60" 
         Height="30" 
         Content="Theme" 
-        Background="CornflowerBlue" 
-        Foreground="White" 
-        BorderThickness="2"
-        BorderBrush="Gray"
+        Background="{DynamicResource ButtonBackgroundBrush}" 
+        Foreground="{DynamicResource ButtonForegroundBrush}" 
+        BorderThickness="1"
+        BorderBrush="{DynamicResource BorderBrush}"
         FontWeight="Bold" 
+        FontSize="10"
         HorizontalAlignment="Right" 
         VerticalAlignment="Center" 
         Click="ChangeThemeButton_Click"/>
@@ -45,11 +46,11 @@
                     Grid.Row="1" 
                     Grid.Column="0" 
                     Margin="10" 
-                    Background="WhiteSmoke"
-                    Foreground="Black"
-                   
+                    Background="{DynamicResource SecondaryBackgroundBrush}"
+                    Foreground="{DynamicResource TextBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     ItemsSource="{Binding ConnectedUsers}" >
-            
+
         </ListBox>
 
 
@@ -60,8 +61,9 @@
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Auto"
                     IsReadOnly="True"
-                    Background="WhiteSmoke"
-                    Foreground="Black"
+                    Background="{DynamicResource SecondaryBackgroundBrush}"
+                    Foreground="{DynamicResource TextBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     FontSize="14"
                     FontFamily="Consolas"
                     TextWrapping="Wrap"
@@ -79,10 +81,10 @@
                 Width="160" 
                 Height="30" 
                 Content="Start Server" 
-                Background="CornflowerBlue" 
-                Foreground="White" 
+                Background="{DynamicResource ButtonBackgroundBrush}" 
+                Foreground="{DynamicResource ButtonForegroundBrush}" 
                 BorderThickness="2"
-                BorderBrush="Gray"
+                BorderBrush="{DynamicResource BorderBrush}"
                 FontWeight="Bold" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Center" 
@@ -102,10 +104,10 @@
                     Width="160" 
                     Height="30"
                     Content="Broadcast"
-                    Background="CornflowerBlue" 
-                    Foreground="White" 
+                    Background="{DynamicResource ButtonBackgroundBrush}" 
+                    Foreground="{DynamicResource ButtonForegroundBrush}" 
                     BorderThickness="2"
-                    BorderBrush="Gray"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     FontWeight="Bold" 
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center" 
@@ -116,10 +118,10 @@
                     Width="160" 
                     Height="30"
                     Content="Ban user"
-                    Background="CornflowerBlue" 
-                    Foreground="White" 
+                    Background="{DynamicResource ButtonBackgroundBrush}" 
+                    Foreground="{DynamicResource ButtonForegroundBrush}" 
                     BorderThickness="2"
-                    BorderBrush="Gray"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     FontWeight="Bold" 
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center" 
@@ -130,10 +132,10 @@
                     Width="160" 
                     Height="30"
                     Content="Unban user"
-                    Background="CornflowerBlue" 
-                    Foreground="White" 
+                    Background="{DynamicResource ButtonBackgroundBrush}" 
+                    Foreground="{DynamicResource ButtonForegroundBrush}" 
                     BorderThickness="2"
-                    BorderBrush="Gray"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     FontWeight="Bold" 
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center" 
@@ -144,22 +146,15 @@
                     Width="160" 
                     Height="30"
                     Content="Open dataBase"
-                    Background="CornflowerBlue" 
-                    Foreground="White" 
+                    Background="{DynamicResource ButtonBackgroundBrush}" 
+                    Foreground="{DynamicResource ButtonForegroundBrush}" 
                     BorderThickness="2"
-                    BorderBrush="Gray"
+                    BorderBrush="{DynamicResource BorderBrush}"
                     FontWeight="Bold" 
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center" 
                     Click="OpenDatabaseButton_Click"
                     />
-
-
         </StackPanel>
-                    
-
     </Grid>
-
-
-    
 </Window>

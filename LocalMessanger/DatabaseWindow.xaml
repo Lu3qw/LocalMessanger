@@ -7,15 +7,15 @@
         mc:Ignorable="d"
         Title="Database Management" Height="600" Width="800"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="10">
+    <Grid Background="{DynamicResource BackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="1">
-            <TabItem Header="Users">
-                <Grid Margin="5">
+        <TabControl Grid.Row="1" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextBrush}">
+            <TabItem Header="Users" Background="{DynamicResource SecondaryBackgroundBrush}" Foreground="{DynamicResource TextBrush}">
+                <Grid Margin="5" Background="{DynamicResource BackgroundBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -23,13 +23,22 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Button x:Name="RefreshUsersButton" Content="Refresh" Width="80" 
-                                Margin="0,0,10,0" Click="RefreshUsersButton_Click"/>
+                                Margin="0,0,10,0" Click="RefreshUsersButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                         <Button x:Name="DeleteUserButton" Content="Delete" Width="80" 
-                                Margin="0,0,10,0" Click="DeleteUserButton_Click"/>
+                                Margin="0,0,10,0" Click="DeleteUserButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                     </StackPanel>
 
                     <DataGrid x:Name="UsersDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
-                              IsReadOnly="True" SelectionMode="Single">
+                              IsReadOnly="True" SelectionMode="Single"
+                              Background="{DynamicResource SecondaryBackgroundBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                             <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
@@ -40,8 +49,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Messages">
-                <Grid Margin="5">
+            <TabItem Header="Messages" Background="{DynamicResource SecondaryBackgroundBrush}" Foreground="{DynamicResource TextBrush}">
+                <Grid Margin="5" Background="{DynamicResource BackgroundBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -49,13 +58,22 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Button x:Name="RefreshMessagesButton" Content="Refresh" Width="80" 
-                                Margin="0,0,10,0" Click="RefreshMessagesButton_Click"/>
+                                Margin="0,0,10,0" Click="RefreshMessagesButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                         <Button x:Name="DeleteMessageButton" Content="Delete" Width="80" 
-                                Margin="0,0,10,0" Click="DeleteMessageButton_Click"/>
+                                Margin="0,0,10,0" Click="DeleteMessageButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                     </StackPanel>
 
                     <DataGrid x:Name="MessagesDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
-                              IsReadOnly="True" SelectionMode="Single">
+                              IsReadOnly="True" SelectionMode="Single"
+                              Background="{DynamicResource SecondaryBackgroundBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                             <DataGridTextColumn Header="Sender" Binding="{Binding SenderName}" Width="100"/>
@@ -67,8 +85,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Banned Users">
-                <Grid Margin="5">
+            <TabItem Header="Banned Users" Background="{DynamicResource SecondaryBackgroundBrush}" Foreground="{DynamicResource TextBrush}">
+                <Grid Margin="5" Background="{DynamicResource BackgroundBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -76,13 +94,22 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Button x:Name="RefreshBannedButton" Content="Refresh" Width="80" 
-                                Margin="0,0,10,0" Click="RefreshBannedButton_Click"/>
+                                Margin="0,0,10,0" Click="RefreshBannedButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                         <Button x:Name="UnbanUserButton" Content="Unban" Width="80" 
-                                Margin="0,0,10,0" Click="UnbanUserButton_Click"/>
+                                Margin="0,0,10,0" Click="UnbanUserButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                     </StackPanel>
 
                     <DataGrid x:Name="BannedUsersDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
-                              IsReadOnly="True" SelectionMode="Single">
+                              IsReadOnly="True" SelectionMode="Single"
+                              Background="{DynamicResource SecondaryBackgroundBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                             <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
@@ -93,8 +120,8 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Server Logs">
-                <Grid Margin="5">
+            <TabItem Header="Server Logs" Background="{DynamicResource SecondaryBackgroundBrush}" Foreground="{DynamicResource TextBrush}">
+                <Grid Margin="5" Background="{DynamicResource BackgroundBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -102,13 +129,22 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Button x:Name="RefreshLogsButton" Content="Refresh" Width="80" 
-                                Margin="0,0,10,0" Click="RefreshLogsButton_Click"/>
+                                Margin="0,0,10,0" Click="RefreshLogsButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                         <Button x:Name="ClearLogsButton" Content="Clear Logs" Width="80" 
-                                Margin="0,0,10,0" Click="ClearLogsButton_Click"/>
+                                Margin="0,0,10,0" Click="ClearLogsButton_Click"
+                                Background="{DynamicResource ButtonBackgroundBrush}" 
+                                Foreground="{DynamicResource ButtonForegroundBrush}" 
+                                BorderBrush="{DynamicResource BorderBrush}"/>
                     </StackPanel>
 
                     <DataGrid x:Name="LogsDataGrid" Grid.Row="1" AutoGenerateColumns="False" 
-                              IsReadOnly="True" SelectionMode="Single">
+                              IsReadOnly="True" SelectionMode="Single"
+                              Background="{DynamicResource SecondaryBackgroundBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                             <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*"/>
